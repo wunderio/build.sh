@@ -1,5 +1,9 @@
 #!/usr/bin/env python
+# *****************************************************************************
 # build.sh by the Wunderful People at Wunderkraut
+#
+# https://github.com/tcmug/build.sh
+# *****************************************************************************
 
 import getopt
 import sys
