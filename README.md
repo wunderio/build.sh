@@ -11,23 +11,52 @@ It is built to:
  - Enhance security of your Drupal installation.
  - Make your life just a little bit easier and worry free.
 
+Usage:
 
+@TODO
 
-File/directory				Explanation
+Running build.sh without any parameters will give you a simple help on what you can do.
 
-code/						Custom modules, themes, features, etc.
+	$ build.sh [options] [command] [site]
 
-	profiles/wk				Generic site install profile -> profiles/wk
-	modules					Custom modules directory ->  sites/all/modules/custom
-	themes					Custom themes directory -> sites/all/themes/custom
+Commands:
 
-conf/						Configuration files
+@TODO
 
-	site.yml				build.sh configuration
-	site.make				drush make file
-	local.settings.php		Drupal settings.php file -> sites/default/settings.php		
+build.sh commands can vary from a configuration file to another. A command consists of a number of steps which are executed in the order in which they are defined.
 
-files/						Drupal files folder -> sites/default/files
+There are a few hard coded commands:
+
+./build.sh test
+Would run a simple test on your drush make file to check for problematic projects/libraries
+
+The example configuration file in conf/site.yml defines the following commands:
+ - new
+ - update
+ - package
+ - backup
+
+Provided steps:
+
+@TODO
+
+About files and directories:
+
+	File/directory				Explanation
+
+	code/						Custom modules, themes, features, etc.
+
+		profiles/wk				Generic site install profile -> profiles/wk
+		modules					Custom modules directory ->  sites/all/modules/custom
+		themes					Custom themes directory -> sites/all/themes/custom
+
+	conf/						Configuration files
+
+		site.yml				build.sh configuration
+		site.make				drush make file
+		local.settings.php		Drupal settings.php file -> sites/default/settings.php		
+
+	files/						Drupal files folder -> sites/default/files
 
 
 
