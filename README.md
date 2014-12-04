@@ -3,6 +3,10 @@ build.sh
 
 By the Wunderful People at Wunderkraut
 
+--
+
+Apologies for the incomplete documentation! We're working on it.
+
 build.sh is a tool for making, updating and managing Drupal installations from the development phase to production. 
 
 It is built to:
