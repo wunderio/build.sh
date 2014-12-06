@@ -1,19 +1,36 @@
 ---
 # Example site.yml
 
-# Default environment is Vagrant:
+# The default environment is our local development environment.
+# Note that the the default site is used as a base for all sites, so whatever you define here are inherited to
+# other site definitions.
 default:
 
+  # An alias or aliases for the site, this could also be:
+  # aliases:
+  #   - vagrant
+  #   - mylocalbox
   aliases: vagrant
 
+  # The drush make file to use
   makefile: conf/site.make
+
+  # Directory used to build the site
   temporary: _build
+
+  # The final produced Drupal installation
   final: drupal
+
+  # Directory which will house all the previous builds
   previous: builds
+
+  # Installation profile to use
   profile: wk 
+
+  # Site name given at installation phase
   site: Wundersite
 
-  # In development environments we want to use symlinks, note settings.php
+  # In development environments we usually want to use symlinks, note the settings.php linking
   link:
     - files: sites/default/files
     - code/modules: sites/all/modules/custom
@@ -21,26 +38,16 @@ default:
     - code/profiles/wk: profiles/wk
     - conf/local.settings.php: sites/default/settings.php
 
-# Local environment:
-local:
-
-  # Local is sometimes used outside of Vagrant boxes, for example with MAMP)
-  link:
-    - files: sites/default/files
-    - code/modules/custom: sites/all/modules/custom
-    - code/modules/features: sites/all/modules/features
-    - code/themes/custom: sites/all/themes/custom
-    - code/profiles/wk: profiles/wk
-    - conf/local.settings.php: sites/default/settings.php
-
 # Test environment:
 test:
+
+  aliases: stage
 
   # Test environment only symlinks files
   link:
     - files: sites/default/files
 
-  # Other files are copied, note settings.php
+  # Other files are copied, again note the settings.php, in our test enviroment we want to use another settings file.
   copy:
     - code/modules/custom: sites/all/modules/custom
     - code/modules/features: sites/all/modules/features
@@ -64,6 +71,8 @@ production:
     - code/themes/custom: sites/all/themes/custom
     - code/profiles/wk: profiles/wk
     - conf/prod.settings.php: sites/default/settings.php
+
+
 
 # Command sets:
 commands:
