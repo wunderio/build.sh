@@ -225,12 +225,12 @@ class Maker:
 	def shell(self, command): 
 		if isinstance(command, list):
 			for step in command:
-				value = subprocess.call(shlex.split(step)) == 0
+				value = os.system(command) == 0
 				if not value:
 					return False
 			return True
 		else:
-			return subprocess.call(shlex.split(command)) == 0
+			return os.system(command) == 0
 
 	def append(self, command):
 		files = command.split(">")
