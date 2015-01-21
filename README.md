@@ -84,10 +84,13 @@ The provided steps are:
  		- append: conf/our_htaccess_additions > current/.htaccess
  - link
  	Process link and copy directives. This step is not required as it is run by the finalize step if not yet ran.
+ - verify 
+ 	Ask user verification by typing yes to a question, example:
+ 		- verify: "Type yes to build new: "
  - test
  	Tests make file for possible volatile module/library references, in essence this is the same as running ./build.sh test
  - shell
- 	Run a shell command. NOTE: currently piping does not work, this means you cannot do things like 'echo "hello" >> world.txt'
+ 	Run a shell command (as of version 0.7 input & output redirectors works)
 
 Example of usage:
 

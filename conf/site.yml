@@ -73,7 +73,6 @@ production:
     - conf/prod.settings.php: sites/default/settings.php
 
 
-
 # Command sets:
 commands:
 
@@ -82,6 +81,7 @@ commands:
 
   # Basic new site functionality
   new:
+    - verify: "Type yes to verify you want to build a new installation: "
     - make
     - backup
     - purge
@@ -95,6 +95,12 @@ commands:
     - backup
     - finalize
     - update
+
+  reinstall:
+    - shell: cd drupal && drush sql-drop -y 
+
+  purge:
+    - purge
 
   # This is just an example on how to create custom commands,
   # this will create a .tgz out of the drupal installation without
