@@ -86,7 +86,7 @@ class Maker:
 		self.temp_build_dir = os.path.abspath(settings['temporary'])
 		self.final_build_dir = os.path.abspath(settings['final'])
 		self.old_build_dir = os.path.abspath(settings.get('previous', 'previous'))
-		self.makefile = os.path.abspath(settings.get('makefile', 'conf/hslfi.make'))
+		self.makefile = os.path.abspath(settings.get('makefile', 'conf/site.make'))
 		self.profile_name = settings.get('profile', 'standard')
 		self.site_name = settings.get('site', 'A drupal site')
 		self.settings = settings
