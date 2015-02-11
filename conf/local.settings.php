@@ -7,6 +7,6 @@
 
 $databases['default']['default'] = array(
   'driver' => 'sqlite',
-  'database' => 'test.sqlite',
+  'database' => dirname(DRUPAL_ROOT) . '/db.sqlite',
 );
 
