@@ -27,6 +27,10 @@ The only extra library you may have to install is the python yaml library. This 
 
 $ pip install ...
 
+Or if you are using CentOS 6.4: 
+
+$ yum install PyYAML
+
 Basic usage:
 
 Running build.sh without any parameters will give you a simple help on what you can do.
