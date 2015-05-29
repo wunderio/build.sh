@@ -31,7 +31,7 @@ class MakeItem:
 			self.project_type = 'library'
 		else:
 			self.project_type = 'module'
-		
+
 		self.download_args = {}
 
 	# Parse a line from site.make for this project/lib
@@ -70,7 +70,7 @@ class MakeItem:
 
 # BuildError exception class.
 class BuildError(Exception):
-	
+
 	def __init__(self, value):
 		self.value = value
 
@@ -101,7 +101,7 @@ class Maker:
 	def test(self):
 		self._validate_makefile()
 
-	# Check if given program exists 
+	# Check if given program exists
 	# http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
 	def _which(self, program):
 		import os
@@ -193,7 +193,7 @@ class Maker:
 		# Link and copy required files
 		self._link()
 		self._copy()
-		self.linked = True	
+		self.linked = True
 
 	# Finalize new build to be the final build
 	def finalize(self):
@@ -254,7 +254,7 @@ class Maker:
 			raise BuildError("Cancelled by user")
 
 	# Execute a shell command
-	def shell(self, command): 
+	def shell(self, command):
 		if isinstance(command, list):
 			for step in command:
 				value = os.system(command) == 0
@@ -274,11 +274,11 @@ class Maker:
 
 	# Execute given step
 	def execute(self, step):
-		
+
 		command = False
 		if isinstance(step, dict):
 			step, command = step.popitem()
-	
+
 		if step == 'make':
 			self.make()
 		elif step == 'backup':
@@ -308,7 +308,7 @@ class Maker:
 
 
 	# Collect make args
-	def _collect_make_args(self): 
+	def _collect_make_args(self):
 		return [
 			"--strict=0",
 			"--concurrency=20",
@@ -388,7 +388,7 @@ class Maker:
 		# Restore write rights to sites/default folder:
 		mode = os.stat(self.final_build_dir + "/sites/default").st_mode
 		os.chmod(self.final_build_dir + "/sites/default", mode|stat.S_IWRITE)
-		
+
 		shutil.copytree(self.final_build_dir, self.old_build_dir + "/" + name,
 			ignore=lambda path, files: to_ignore[path])
 
@@ -407,9 +407,9 @@ class Maker:
 		shutil.rmtree(self.final_build_dir)
 
 	# Ensure we have write access to the given dir
-	def _ensure_writable(self, path): 
-		for root, dirs, files in os.walk(path):  
-			for momo in dirs:  
+	def _ensure_writable(self, path):
+		for root, dirs, files in os.walk(path):
+			for momo in dirs:
 				file = os.path.join(root, momo)
 				mode = os.stat(file).st_mode
 				os.chmod(file, mode|stat.S_IWRITE)
@@ -422,7 +422,7 @@ class Maker:
 		# Ensure target directory exists
 		target_container = os.path.dirname(filepath)
 		if not os.path.exists(target_container):
-			self.notice("Created directory " + target_container) 
+			self.notice("Created directory " + target_container)
 			os.makedirs(target_container)
 
 	# Symlink file from source to target
@@ -432,7 +432,7 @@ class Maker:
 			source = os.path.relpath(source, os.path.dirname(target))
 			os.symlink(source, target)
 		else:
-			raise BuildError("Can't link " + source + " to " + target)
+			raise BuildError("Can't link " + source + " to " + target + ". Make sure that the source exists.")
 
 	# Copy file from source to target
 	def _copy_files(self, source, target):
@@ -443,7 +443,7 @@ class Maker:
 			else:
 				shutil.copyfile(source, target)
 		else:
-			raise BuildError("Can't copy " + source + " to " + target)
+			raise BuildError("Can't copy " + source + " to " + target + ". Make sure that the source exists.")
 
 
 # Print help function
@@ -486,7 +486,7 @@ def main(argv):
 			config_file = arg
 		elif opt in ("-v", "--version"):
 			version()
-			return 
+			return
 
 	try:
 
@@ -495,7 +495,7 @@ def main(argv):
 		settings = yaml.safe_load(f)
 		f.close()
 
-		try:			
+		try:
 			command = args[0]
 		except IndexError:
 			help()

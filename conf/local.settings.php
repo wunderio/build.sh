@@ -10,3 +10,5 @@ $databases['default']['default'] = array(
   'database' => 'test.sqlite',
 );
 
+
+ini_set('memory_limit','1024M');

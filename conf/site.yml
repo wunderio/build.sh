@@ -25,7 +25,7 @@ default:
   previous: builds
 
   # Installation profile to use
-  profile: wk 
+  profile: wk
 
   # Site name given at installation phase
   site: Wundersite
@@ -57,7 +57,7 @@ test:
 
 # Production environment:
 production:
-  
+
   aliases: prod
 
   # Prod environment only symlinks files
@@ -87,6 +87,7 @@ commands:
     - purge
     - finalize
     - install
+    - cleanup
 
 
   # Basic site update functionality
@@ -95,9 +96,10 @@ commands:
     - backup
     - finalize
     - update
+    - cleanup
 
   reinstall:
-    - shell: cd drupal && drush sql-drop -y 
+    - shell: cd drupal && drush sql-drop -y
 
   purge:
     - purge

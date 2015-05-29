@@ -14,7 +14,7 @@ defaults[projects][subdir] = "contrib"
 
 projects[admin_views][version] = 1.3
 projects[ctools][version] = 1.4
-projects[devel][version] = 1.5 
+projects[devel][version] = 1.5
 projects[entity][version] = 1.5
 projects[entity_translation][version] = 1.0-beta3
 projects[field_collection][version] = 1.0-beta7
