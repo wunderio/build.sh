@@ -2,7 +2,7 @@
 # *****************************************************************************
 # build.sh by the Wunderful People at Wunderkraut
 #
-# https://github.com/tcmug/build.sh
+# https://github.com/wunderkraut/build.sh
 # *****************************************************************************
 
 import getopt
