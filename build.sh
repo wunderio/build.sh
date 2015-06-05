@@ -16,9 +16,10 @@ import datetime
 import shlex
 import stat
 import re
+import gzip
 
 # Build scripts version string.
-build_sh_version_string = "build.sh 0.7"
+build_sh_version_string = "build.sh 0.8"
 
 # Sitt.make item (either a project/library from the site.make)
 class MakeItem:
@@ -364,11 +365,25 @@ class Maker:
 		if 'skip-database' in params:
 			self.notice("Database dump skipped as requested")
 		else:
+
+			dump_file = self.final_build_dir + '/db.sql'
+			gzdump_file = self.final_build_dir + '/db.sql.gz'
+
 			if self._drush([
 				"--root=" + format(self.final_build_dir),
 				'sql-dump',
-				'--result-file=' + self.final_build_dir + '/db.sql'
+				'--result-file=' + dump_file
 			], True):
+
+				# Compress the dump
+				f_in = open(dump_file, 'rb')
+				f_out = gzip.open(gzdump_file, 'wb')
+				f_out.writelines(f_in)
+				f_out.close()
+				f_in.close()
+
+				os.remove(dump_file)
+
 				self.notice("Database dump taken")
 			else:
 				self.warning("No database dump taken")
