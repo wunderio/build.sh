@@ -201,13 +201,16 @@ class Maker:
 
 	def cleanup(self):
 		import time
-		compare = time.time() - (60*60*24)
+		compare = time.time() - (60)
 		for f in os.listdir(self.old_build_dir):
 			fullpath = os.path.join(self.old_build_dir, f)
 			if os.stat(fullpath).st_mtime < compare:
 				if os.path.isdir(fullpath):
 					self.notice("Removing old build " + f)
 					shutil.rmtree(fullpath)
+				elif os.path.isfile(fullpath):
+					self.notice("Removing old build archive " + f)
+					os.remove(fullpath)
 
 	# Purge current final build
 	def purge(self):
