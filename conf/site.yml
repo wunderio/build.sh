@@ -18,6 +18,8 @@ default:
   # Directory used to build the site
   temporary: _build
 
+  make_cache: .make_cache
+
   # The final produced Drupal installation
   final: drupal
 

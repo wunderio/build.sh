@@ -17,6 +17,7 @@ import shlex
 import stat
 import re
 import gzip
+import tarfile
 
 # Build scripts version string.
 build_sh_version_string = "build.sh 0.8"
@@ -84,12 +85,14 @@ class Maker:
 	def __init__(self, settings):
 
 		self.drush = settings.get('drush', 'drush')
-		self.temp_build_dir = os.path.abspath(settings['temporary'])
+		self.temp_build_dir_name = settings['temporary']
+		self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
 		self.final_build_dir = os.path.abspath(settings['final'])
 		self.old_build_dir = os.path.abspath(settings.get('previous', 'previous'))
 		self.makefile = os.path.abspath(settings.get('makefile', 'conf/site.make'))
 		self.profile_name = settings.get('profile', 'standard')
 		self.site_name = settings.get('site', 'A drupal site')
+		self.make_cache_dir = settings.get('make_cache', '.make_cache')
 		self.settings = settings
 		self.store_old_buids = True
 		self.linked = False
@@ -152,13 +155,36 @@ class Maker:
 	def make(self):
 		self._precheck()
 		self.notice("Building")
-		if not self._drush(self._collect_make_args()):
-			raise BuildError("Make failed - check your makefile")
-		f = open(self.temp_build_dir + "/buildhash", "w")
-		f.write(self.makefile_hash)
-		f.close()
+
+		packaged_build = self.make_cache_dir + '/' + self.makefile_hash + '.tgz';
+
+		if os.path.exists(packaged_build):
+			# Existing build
+			self.notice("Make file unchanged - unpacking previous make")
+			tar = tarfile.open(packaged_build)
+			tar.extractall()
+			tar.close()
+
+		else:
+
+			if not self._drush(self._collect_make_args()):
+				raise BuildError("Make failed - check your makefile")
+
+			os.remove(self.temp_build_dir + "/sites/default/default.settings.php")
+
+			if not os.path.isdir(self.make_cache_dir):
+				os.makedirs(self.make_cache_dir)
+
+			tar = tarfile.open(packaged_build, "w:gz")
+			tar.add(self.temp_build_dir, arcname=self.temp_build_dir_name)
+			tar.close()
+
+
+		# f = open(self.temp_build_dir + "/buildhash", "w")
+		# f.write(self.makefile_hash)
+		# f.close()
 		# Remove default.settings.php
-		os.remove(self.temp_build_dir + "/sites/default/default.settings.php")
+
 
 
 	# Existing final build?
