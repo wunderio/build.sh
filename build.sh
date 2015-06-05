@@ -87,7 +87,8 @@ class Maker:
 		self.drush = settings.get('drush', 'drush')
 		self.temp_build_dir_name = settings['temporary']
 		self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
-		self.final_build_dir = os.path.abspath(settings['final'])
+		self.final_build_dir_name = settings['final']
+		self.final_build_dir = os.path.abspath(self.final_build_dir_name)
 		self.old_build_dir = os.path.abspath(settings.get('previous', 'previous'))
 		self.makefile = os.path.abspath(settings.get('makefile', 'conf/site.make'))
 		self.profile_name = settings.get('profile', 'standard')
@@ -178,7 +179,6 @@ class Maker:
 			tar = tarfile.open(packaged_build, "w:gz")
 			tar.add(self.temp_build_dir, arcname=self.temp_build_dir_name)
 			tar.close()
-
 
 		# f = open(self.temp_build_dir + "/buildhash", "w")
 		# f.write(self.makefile_hash)
@@ -385,6 +385,13 @@ class Maker:
 		if not os.path.isdir(self.old_build_dir):
 			os.mkdir(self.old_build_dir)
 
+	# TarFile exclude callback for _backup function
+	def _backup_exlude(self, file):
+		for exclude in self._build_exclude_files:
+			if file.endswith(exclude):
+				return True
+		return False
+
 	# Backup existing final build
 	def _backup(self, params):
 
@@ -401,37 +408,25 @@ class Maker:
 				'--result-file=' + dump_file
 			], True):
 
-				# Compress the dump
-				f_in = open(dump_file, 'rb')
-				f_out = gzip.open(gzdump_file, 'wb')
-				f_out.writelines(f_in)
-				f_out.close()
-				f_in.close()
-
-				os.remove(dump_file)
-
 				self.notice("Database dump taken")
+
 			else:
+
 				self.warning("No database dump taken")
 
 		name = datetime.datetime.now()
 		name = name.isoformat()
 
-		from collections import defaultdict
-
-		to_ignore = defaultdict(set)
+		backup_file = self.old_build_dir + "/" + name + ".tgz"
 
 		if 'ignore' in params:
-			for path in params['ignore']:
-				dirname, filename = os.path.split(path)
-				to_ignore[self.final_build_dir + "/" + dirname].add(filename)
+			self._build_exclude_files = params['ignore']
+		else:
+			self._build_exclude_files = {}
 
-		# Restore write rights to sites/default folder:
-		mode = os.stat(self.final_build_dir + "/sites/default").st_mode
-		os.chmod(self.final_build_dir + "/sites/default", mode|stat.S_IWRITE)
-
-		shutil.copytree(self.final_build_dir, self.old_build_dir + "/" + name,
-			ignore=lambda path, files: to_ignore[path])
+		tar = tarfile.open(backup_file, "w:gz")
+		tar.add(self.final_build_dir, arcname=self.final_build_dir_name, exclude=self._backup_exlude)
+		tar.close()
 
 
 	# Wipe existing final build
