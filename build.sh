@@ -427,7 +427,7 @@ class Maker:
 		else:
 			self._build_exclude_files = {}
 
-		tar = tarfile.open(backup_file, "w:gz")
+		tar = tarfile.open(backup_file, "w:gz", dereference=True)
 		tar.add(self.final_build_dir, arcname=self.final_build_dir_name, exclude=self._backup_exlude)
 		tar.close()
 
