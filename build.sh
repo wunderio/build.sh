@@ -97,7 +97,7 @@ class Maker:
 		self.settings = settings
 		self.store_old_buids = True
 		self.linked = False
-		self.makefile_hash = hashlib.md5(self.makefile).hexdigest()
+		self.makefile_hash = hashlib.md5(open(self.makefile, 'rb').read()).hexdigest()
 
 		# See if drush is installed
 		if not self._which('drush'):
