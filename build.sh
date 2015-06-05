@@ -201,7 +201,7 @@ class Maker:
 
 	def cleanup(self):
 		import time
-		compare = time.time() - (60)
+		compare = time.time() - (60*60*24)
 		for f in os.listdir(self.old_build_dir):
 			fullpath = os.path.join(self.old_build_dir, f)
 			if os.stat(fullpath).st_mtime < compare:
