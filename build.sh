@@ -20,7 +20,7 @@ import gzip
 import tarfile
 
 # Build scripts version string.
-build_sh_version_string = "build.sh 0.8"
+build_sh_version_string = "build.sh 0.9"
 
 # Sitt.make item (either a project/library from the site.make)
 class MakeItem:
