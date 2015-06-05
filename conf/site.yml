@@ -117,6 +117,7 @@ commands:
   # that will skip database and files dir
   backup:
     - backup:
+        skip-database: yes
         ignore:
           - sites/default/files
 
