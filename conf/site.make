@@ -4,6 +4,9 @@
 core = 7.0
 api = 2
 
+; Set localization server l10n url for older drush versions
+defaults[projects][l10n_url] = http://ftp.drupal.org/files/translations/l10n_server.xml
+
 projects[drupal][type] = core
 projects[drupal][version] = 7.37
 
