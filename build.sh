@@ -20,7 +20,7 @@ import gzip
 import tarfile
 
 # Build scripts version string.
-build_sh_version_string = "build.sh 0.9"
+build_sh_version_string = "build.sh 1.0"
 
 build_sh_skip_backup = False
 build_sh_disable_cache = False
