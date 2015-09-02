@@ -22,6 +22,9 @@ import tarfile
 # Build scripts version string.
 build_sh_version_string = "build.sh 0.9"
 
+build_sh_skip_backup = False
+build_sh_disable_cache = False
+
 # Sitt.make item (either a project/library from the site.make)
 class MakeItem:
 
@@ -154,12 +157,13 @@ class Maker:
 
 	# Run make
 	def make(self):
+		global build_sh_disable_cache
 		self._precheck()
 		self.notice("Building")
 
 		packaged_build = self.make_cache_dir + '/' + self.makefile_hash + '.tgz';
 
-		if os.path.exists(packaged_build):
+		if not build_sh_disable_cache and os.path.exists(packaged_build):
 			# Existing build
 			self.notice("Make file unchanged - unpacking previous make")
 			tar = tarfile.open(packaged_build)
@@ -185,14 +189,16 @@ class Maker:
 		# f.close()
 		# Remove default.settings.php
 
-
-
 	# Existing final build?
 	def hasExistingBuild(self):
 		return os.path.isdir(self.final_build_dir)
 
 	# Backup current final build
 	def backup(self, params):
+		global build_sh_skip_backup
+		if build_sh_skip_backup:
+			self.notice("Skipping backup!")
+			return
 		if not params:
 			params = {}
 		self.notice("Backing up current build")
@@ -495,6 +501,10 @@ def help():
 	print '			Print this help'
 	print ' -c --config'
 	print '			Configuration file to use, defaults to conf/site.yml'
+	print ' -s --skip-backup'
+	print '			Do not take backups, ever'
+	print ' -d --disable-cache'
+	print '			Do not use caches'
 	print ' -v --version'
 	print '			Print version information'
 
@@ -512,7 +522,7 @@ def main(argv):
 
 	# Parse options:
 	try:
-		opts, args = getopt.getopt(argv, "hc:vt", ["help", "config=", "version", "test"])
+		opts, args = getopt.getopt(argv, "hdc:vst", ["help", "config=", "version", "test", "skip-backup", "disable-cache"])
 	except getopt.GetoptError:
 		help()
 		return
@@ -523,6 +533,12 @@ def main(argv):
 			return
 		elif opt in ("-c", "--config"):
 			config_file = arg
+		elif opt in ("-s", "--skip-backup"):
+			global build_sh_skip_backup
+			build_sh_skip_backup = True
+		elif opt in ("-d", "--disable-cache"):
+			global build_sh_disable_cache
+			build_sh_disable_cache = True
 		elif opt in ("-v", "--version"):
 			version()
 			return
