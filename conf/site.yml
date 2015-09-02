@@ -50,10 +50,12 @@ test:
     - files: sites/default/files
 
   # Other files are copied, again note the settings.php, in our test enviroment we want to use another settings file.
+  link:
+    - files: sites/default/files
+
   copy:
-    - code/modules/custom: sites/all/modules/custom
-    - code/modules/features: sites/all/modules/features
-    - code/themes/custom: sites/all/themes/custom
+    - code/modules: sites/all/modules/custom
+    - code/themes: sites/all/themes/custom
     - code/profiles/wk: profiles/wk
     - conf/test.settings.php: sites/default/settings.php
 
@@ -74,9 +76,8 @@ production:
 
   # Other files are copied, note settings.php
   copy:
-    - code/modules/custom: sites/all/modules/custom
-    - code/modules/features: sites/all/modules/features
-    - code/themes/custom: sites/all/themes/custom
+    - code/modules: sites/all/modules/custom
+    - code/themes: sites/all/themes/custom
     - code/profiles/wk: profiles/wk
     - conf/prod.settings.php: sites/default/settings.php
 
