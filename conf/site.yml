@@ -57,6 +57,12 @@ test:
     - code/profiles/wk: profiles/wk
     - conf/test.settings.php: sites/default/settings.php
 
+  local_commands:
+
+    # Running command ./build.sh hello test will print Hello world!
+    hello:
+      - shell: echo "Hello world!"
+
 # Production environment:
 production:
 

@@ -566,9 +566,6 @@ def main(argv):
 			else:
 				site = 'default'
 
-		# ToDo: Ask for verification when running build new on prod
-		# ToDo: Ask for verification when running build without WKV_SITE_ENV or specified site
-
 		sites = []
 		sites.append(site)
 
@@ -601,6 +598,10 @@ def main(argv):
 			settings['commands']['test'] = {"test": "test"}
 
 			maker.notice("Using configuration " + site)
+
+			# Add and overwrite commands with local_commands
+			if 'local_commands' in settings[site]:
+				settings['commands'].update(settings[site]['local_commands'])
 
 			if do_build:
 				# Execute the command(s).
