@@ -16,3 +16,5 @@ $databases['default']['default'] = array(
 );
 
 ini_set('memory_limit','1024M');
+
+$conf['drupal_http_request_fails'] = FALSE;
