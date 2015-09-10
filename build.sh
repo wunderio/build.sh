@@ -175,7 +175,7 @@ class Maker:
 			if not self._drush(self._collect_make_args()):
 				raise BuildError("Make failed - check your makefile")
 
-			os.remove(self.temp_build_dir + "/sites/default/default.settings.php")
+			#os.remove(self.temp_build_dir + "/sites/default/default.settings.php")
 
 			if not os.path.isdir(self.make_cache_dir):
 				os.makedirs(self.make_cache_dir)
