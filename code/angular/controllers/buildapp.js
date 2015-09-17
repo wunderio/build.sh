@@ -17,7 +17,6 @@ angular.module('angular-drupal').config(function($provide) {
 
 
 buildApp.controller('BuildAppCtrl', ['$scope', 'drupal', function ($scope, drupal) {
-	$scope.node = {'title': 'node title', 'body': 'node body'};
 
 	drupal.node_load(1).then(function(node) {
 		$scope.node = {'title': node.title, 'body': node.body.und[0].safe_value};
