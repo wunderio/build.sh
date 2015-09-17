@@ -59,6 +59,7 @@ test:
     - code/themes: sites/all/themes/custom
     - code/profiles/wk: profiles/wk
     - conf/test.settings.php: sites/default/settings.php
+    - code/angular: app
 
   local_commands:
 
@@ -81,7 +82,7 @@ production:
     - code/themes: sites/all/themes/custom
     - code/profiles/wk: profiles/wk
     - conf/prod.settings.php: sites/default/settings.php
-
+    - code/angular: app
 
 # Command sets:
 commands:
