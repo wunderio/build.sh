@@ -1,11 +1,9 @@
 
+// Hacky stuff herein
+var D;
 
 var buildApp = angular.module('buildApp', ['angular-drupal']).run(function($rootScope, drupal) {
-	console.log($rootScope);
-	drupal.node_load(1).then(function(node) {
-		$rootScope.nodes = [{'title': node.title}];
-	});
-
+	D = drupal;
 });
 
 buildApp.$inject = ["$rootScope", "drupal"];
@@ -19,10 +17,13 @@ angular.module('angular-drupal').config(function($provide) {
 });
 
 
-
 buildApp.controller('BuildAppCtrl', function ($scope) {
 	$scope.nodes = [
 		{'title': 'node title'},
 	];
+
+	D.node_load(1).then(function(node) {
+		$scope.nodes = [{'title': node.title}];
+	});
 
 });
