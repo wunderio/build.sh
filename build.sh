@@ -17,9 +17,13 @@ import shlex
 import stat
 import re
 import gzip
+import tarfile
 
 # Build scripts version string.
-build_sh_version_string = "build.sh 0.8"
+build_sh_version_string = "build.sh 1.0"
+
+build_sh_skip_backup = False
+build_sh_disable_cache = False
 
 # Sitt.make item (either a project/library from the site.make)
 class MakeItem:
@@ -84,16 +88,19 @@ class Maker:
 	def __init__(self, settings):
 
 		self.drush = settings.get('drush', 'drush')
-		self.temp_build_dir = os.path.abspath(settings['temporary'])
-		self.final_build_dir = os.path.abspath(settings['final'])
+		self.temp_build_dir_name = settings['temporary']
+		self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
+		self.final_build_dir_name = settings['final']
+		self.final_build_dir = os.path.abspath(self.final_build_dir_name)
 		self.old_build_dir = os.path.abspath(settings.get('previous', 'previous'))
 		self.makefile = os.path.abspath(settings.get('makefile', 'conf/site.make'))
 		self.profile_name = settings.get('profile', 'standard')
 		self.site_name = settings.get('site', 'A drupal site')
+		self.make_cache_dir = settings.get('make_cache', '.make_cache')
 		self.settings = settings
 		self.store_old_buids = True
 		self.linked = False
-		self.makefile_hash = hashlib.md5(self.makefile).hexdigest()
+		self.makefile_hash = hashlib.md5(open(self.makefile, 'rb').read()).hexdigest()
 
 		# See if drush is installed
 		if not self._which('drush'):
@@ -150,16 +157,37 @@ class Maker:
 
 	# Run make
 	def make(self):
+		global build_sh_disable_cache
 		self._precheck()
 		self.notice("Building")
-		if not self._drush(self._collect_make_args()):
-			raise BuildError("Make failed - check your makefile")
-		f = open(self.temp_build_dir + "/buildhash", "w")
-		f.write(self.makefile_hash)
-		f.close()
-		# Remove default.settings.php
-		os.remove(self.temp_build_dir + "/sites/default/default.settings.php")
 
+		packaged_build = self.make_cache_dir + '/' + self.makefile_hash + '.tgz';
+
+		if not build_sh_disable_cache and os.path.exists(packaged_build):
+			# Existing build
+			self.notice("Make file unchanged - unpacking previous make")
+			tar = tarfile.open(packaged_build)
+			tar.extractall()
+			tar.close()
+
+		else:
+
+			if not self._drush(self._collect_make_args()):
+				raise BuildError("Make failed - check your makefile")
+
+			os.remove(self.temp_build_dir + "/sites/default/default.settings.php")
+
+			if not os.path.isdir(self.make_cache_dir):
+				os.makedirs(self.make_cache_dir)
+
+			tar = tarfile.open(packaged_build, "w:gz")
+			tar.add(self.temp_build_dir, arcname=self.temp_build_dir_name)
+			tar.close()
+
+		# f = open(self.temp_build_dir + "/buildhash", "w")
+		# f.write(self.makefile_hash)
+		# f.close()
+		# Remove default.settings.php
 
 	# Existing final build?
 	def hasExistingBuild(self):
@@ -167,6 +195,10 @@ class Maker:
 
 	# Backup current final build
 	def backup(self, params):
+		global build_sh_skip_backup
+		if build_sh_skip_backup:
+			self.notice("Skipping backup!")
+			return
 		if not params:
 			params = {}
 		self.notice("Backing up current build")
@@ -182,6 +214,9 @@ class Maker:
 				if os.path.isdir(fullpath):
 					self.notice("Removing old build " + f)
 					shutil.rmtree(fullpath)
+				elif os.path.isfile(fullpath):
+					self.notice("Removing old build archive " + f)
+					os.remove(fullpath)
 
 	# Purge current final build
 	def purge(self):
@@ -359,6 +394,13 @@ class Maker:
 		if not os.path.isdir(self.old_build_dir):
 			os.mkdir(self.old_build_dir)
 
+	# TarFile exclude callback for _backup function
+	def _backup_exlude(self, file):
+		for exclude in self._build_exclude_files:
+			if file.endswith(exclude):
+				return True
+		return False
+
 	# Backup existing final build
 	def _backup(self, params):
 
@@ -375,37 +417,25 @@ class Maker:
 				'--result-file=' + dump_file
 			], True):
 
-				# Compress the dump
-				f_in = open(dump_file, 'rb')
-				f_out = gzip.open(gzdump_file, 'wb')
-				f_out.writelines(f_in)
-				f_out.close()
-				f_in.close()
-
-				os.remove(dump_file)
-
 				self.notice("Database dump taken")
+
 			else:
+
 				self.warning("No database dump taken")
 
 		name = datetime.datetime.now()
 		name = name.isoformat()
 
-		from collections import defaultdict
-
-		to_ignore = defaultdict(set)
+		backup_file = self.old_build_dir + "/" + name + ".tgz"
 
 		if 'ignore' in params:
-			for path in params['ignore']:
-				dirname, filename = os.path.split(path)
-				to_ignore[self.final_build_dir + "/" + dirname].add(filename)
+			self._build_exclude_files = params['ignore']
+		else:
+			self._build_exclude_files = {}
 
-		# Restore write rights to sites/default folder:
-		mode = os.stat(self.final_build_dir + "/sites/default").st_mode
-		os.chmod(self.final_build_dir + "/sites/default", mode|stat.S_IWRITE)
-
-		shutil.copytree(self.final_build_dir, self.old_build_dir + "/" + name,
-			ignore=lambda path, files: to_ignore[path])
+		tar = tarfile.open(backup_file, "w:gz", dereference=True)
+		tar.add(self.final_build_dir, arcname=self.final_build_dir_name, exclude=self._backup_exlude)
+		tar.close()
 
 
 	# Wipe existing final build
@@ -471,6 +501,10 @@ def help():
 	print '			Print this help'
 	print ' -c --config'
 	print '			Configuration file to use, defaults to conf/site.yml'
+	print ' -s --skip-backup'
+	print '			Do not take backups, ever'
+	print ' -d --disable-cache'
+	print '			Do not use caches'
 	print ' -v --version'
 	print '			Print version information'
 
@@ -488,7 +522,7 @@ def main(argv):
 
 	# Parse options:
 	try:
-		opts, args = getopt.getopt(argv, "hc:vt", ["help", "config=", "version", "test"])
+		opts, args = getopt.getopt(argv, "hdc:vst", ["help", "config=", "version", "test", "skip-backup", "disable-cache"])
 	except getopt.GetoptError:
 		help()
 		return
@@ -499,6 +533,12 @@ def main(argv):
 			return
 		elif opt in ("-c", "--config"):
 			config_file = arg
+		elif opt in ("-s", "--skip-backup"):
+			global build_sh_skip_backup
+			build_sh_skip_backup = True
+		elif opt in ("-d", "--disable-cache"):
+			global build_sh_disable_cache
+			build_sh_disable_cache = True
 		elif opt in ("-v", "--version"):
 			version()
 			return
@@ -525,9 +565,6 @@ def main(argv):
 				site = os.environ['WKV_SITE_ENV']
 			else:
 				site = 'default'
-
-		# ToDo: Ask for verification when running build new on prod
-		# ToDo: Ask for verification when running build without WKV_SITE_ENV or specified site
 
 		sites = []
 		sites.append(site)
@@ -561,6 +598,10 @@ def main(argv):
 			settings['commands']['test'] = {"test": "test"}
 
 			maker.notice("Using configuration " + site)
+
+			# Add and overwrite commands with local_commands
+			if 'local_commands' in settings[site]:
+				settings['commands'].update(settings[site]['local_commands'])
 
 			if do_build:
 				# Execute the command(s).
