@@ -37,6 +37,7 @@ default:
     - code/themes: sites/all/themes/custom
     - code/profiles/wk: profiles/wk
     - conf/local.settings.php: sites/default/settings.php
+    - code/angular: app
 
 # Test environment:
 test:

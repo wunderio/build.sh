@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en" ng-app="buildApp">
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+<script src="app/angular-drupal.js"></script>
+<script src="app/controllers/buildapp.js"></script>
+<body ng-controller="BuildAppCtrl">
+
+
+<ul>
+  <li ng-repeat="node in nodes">
+    <span>{{node.title}}</span>
+  </li>
+</ul>
+
+</body>
+</html>

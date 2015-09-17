@@ -42,3 +42,8 @@ dependencies[] = views_bulk_operations
 dependencies[] = views_ui
 
 
+dependencies[] = libraries
+dependencies[] = services
+dependencies[] = angularjs
+dependencies[] = angular_drupal
+dependencies[] = rest_server
