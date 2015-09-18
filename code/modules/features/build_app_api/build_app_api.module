@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Build App API feature.
+ */
+
+include_once 'build_app_api.features.inc';

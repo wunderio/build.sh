@@ -47,3 +47,4 @@ dependencies[] = services
 dependencies[] = angularjs
 dependencies[] = angular_drupal
 dependencies[] = rest_server
+dependencies[] = build_app_api

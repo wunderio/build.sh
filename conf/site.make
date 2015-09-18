@@ -27,6 +27,7 @@ projects[views][version] = 1.2
 projects[views][version] = 3.8
 projects[views_bulk_operations][version] = 3.2
 projects[webform][version] = 4.1
+projects[features][version] = 2.6
 projects[services][version] = 3.12
 projects[angularjs][version] = 1.4
 projects[angular_drupal][version] = 1.0
