@@ -9,7 +9,7 @@ buildApp.$inject = ["$rootScope", "drupal"];
 
 angular.module('angular-drupal').config(function($provide) {
   $provide.value('drupalSettings', {
-    sitePath: 'http://127.0.0.1:8888/',
+    sitePath: 'http://127.0.0.1:8888',
     endpoint: 'api'
   });
 
