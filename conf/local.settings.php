@@ -24,3 +24,12 @@ $conf['drupal_http_request_fails'] = FALSE;
 ################################################################################
 # Site install will inject settings below this line
 ################################################################################
+$databases['default']['default'] = array (
+  'database' => '/Users/tcmug/www/build.sh/drupal.sqlite',
+  'prefix' => '',
+  'namespace' => 'Drupal\\Core\\Database\\Driver\\sqlite',
+  'driver' => 'sqlite',
+);
+$settings['hash_salt'] = '_Yfo_5ZbqO2oOOrypjh7QlMMmnpkeA2_Egvdn09ZTAa3ajv19494SKvJ06NZcsdb_2piGYqqGA';
+$settings['install_profile'] = 'wk';
+$config_directories['sync'] = 'sites/default/files/config_lJUh5WPtm0SacTKwhSYOhYRInRda6YfXkcC93SP26W_m2UMbC6rfLpq2lX3PEaa9cCgld4DzXA/sync';
