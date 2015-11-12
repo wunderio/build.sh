@@ -236,7 +236,7 @@ class Maker:
 		self.notice("Finalizing new build")
 		if os.path.isdir(self.final_build_dir):
 			self._ensure_writable(self.final_build_dir)
-                       self._unlink()
+                        self._unlink()
 			shutil.rmtree(self.final_build_dir)
 
 		# Make sure linking has happened
@@ -376,7 +376,7 @@ class Maker:
 		if not "link" in self.settings:
 			return
 		for tuple in self.settings['link']:
-			source, target = tuple.popitem()
+			source, target = tuple.items()[0]
 			target = self.final_build_dir + "/" + target
 			if source.endswith('*'):
 				path = source[:-1]
