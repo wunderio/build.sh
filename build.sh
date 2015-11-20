@@ -236,6 +236,7 @@ class Maker:
 		self.notice("Finalizing new build")
 		if os.path.isdir(self.final_build_dir):
 			self._ensure_writable(self.final_build_dir)
+                        self._unlink()
 			shutil.rmtree(self.final_build_dir)
 
 		# Make sure linking has happened
@@ -370,6 +371,22 @@ class Maker:
 			else:
 				self._link_files(source, target)
 
+	# Handle unlink
+	def _unlink(self):
+		if not "link" in self.settings:
+			return
+		for tuple in self.settings['link']:
+			source, target = tuple.items()[0]
+			target = self.final_build_dir + "/" + target
+			if source.endswith('*'):
+				path = source[:-1]
+				paths = [path + name for name in os.listdir(path) if os.path.isdir(path + name)]
+				for source in paths:
+					self._unlink_files(target + "/" + os.path.basename(source))
+			else:
+				self._unlink_files(target)
+
+
 	# Handle copy
 	def _copy(self):
 		if not "copy" in self.settings:
@@ -478,6 +495,13 @@ class Maker:
 			os.symlink(source, target)
 		else:
 			raise BuildError("Can't link " + source + " to " + target + ". Make sure that the source exists.")
+
+	# Unlink file from target
+	def _unlink_files(self, target):
+		self._ensure_container(target)
+		if os.path.exists(target):
+			os.unlink(target)
+
 
 	# Copy file from source to target
 	def _copy_files(self, source, target):
