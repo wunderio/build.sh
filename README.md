@@ -3,6 +3,9 @@ build.sh
 
 By the Wunderful People at Wunderkraut
 
+Released under GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007, see COPYING
+for details.
+
 --
 
 build.sh is a tool for making, updating and managing Drupal installations from the development phase up to production.
@@ -27,7 +30,7 @@ The only extra library you may have to install is the python yaml library. This 
 
 $ pip install ...
 
-Or if you are using CentOS 6.4: 
+Or if you are using CentOS 6.4:
 
 $ yum install PyYAML
 
@@ -38,13 +41,18 @@ Running build.sh without any parameters will give you a simple help on what you 
 	$ build.sh [options] [command] [site]
 
 Options:
-
-  -h --help
- 	Prints help
-  -c --config
-	Configuration file to use, defaults to conf/site.yml'
-  -v --version
-  	Print version information
+ -h --help
+			Print this help
+ -c --config
+			Configuration file to use, defaults to conf/site.yml
+ -o --commands
+			Configuration file to use, defaults to conf/commands.yml
+ -s --skip-backup
+			Do not take backups, ever
+ -d --disable-cache
+			Do not use caches
+ -v --version
+			Print version information
 
 Configuration file:
 
@@ -53,13 +61,13 @@ The site information consists of definitions for temporary build dir, old builds
 
 Commands:
 
-A command is a set of steps defined in the configuration file (see the bottom of conf/site.yml) therefore commands can vary from configuration to another.
+A command is a set of steps defined in the configuration file (see conf/commands.yml) therefore commands can vary from configuration to another.
 
 The only hard coded command is test:
 $ ./build.sh test
 Would do a simple test on your drush make file to check projects/libraries that are not referencing any direct versions (for example drupal.org module dev versions or github master versions).
 
-The example configuration file in conf/site.yml defines the following commands:
+The example configuration file in conf/commands.yml defines the following commands:
 
  - new
  - update
@@ -88,7 +96,7 @@ The provided steps are:
  		- append: conf/our_htaccess_additions > current/.htaccess
  - link
  	Process link and copy directives. This step is not required as it is run by the finalize step if not yet ran.
- - verify 
+ - verify
  	Ask user verification by typing yes to a question, example:
  		- verify: "Type yes to build new: "
  - test
@@ -122,9 +130,10 @@ About files and directories (-> denotes copying/symlinking):
 
 	conf/						Configuration files
 
-		site.yml				build.sh configuration
+		site.yml				build.sh site configuration
+		commands.yml			build.sh commands
 		site.make				drush make file
-		local.settings.php		Drupal settings.php file -> sites/default/settings.php		
+		local.settings.php		Drupal settings.php file -> sites/default/settings.php
 
 	files/						Drupal files folder -> sites/default/files
 

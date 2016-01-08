@@ -1,4 +1,5 @@
+.DS_Store
+.make_cache
 builds
 drupal
-.make_cache
 drupal.sqlite

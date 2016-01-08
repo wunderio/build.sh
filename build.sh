@@ -236,6 +236,7 @@ class Maker:
 		self.notice("Finalizing new build")
 		if os.path.isdir(self.final_build_dir):
 			self._ensure_writable(self.final_build_dir)
+                        self._unlink()
 			shutil.rmtree(self.final_build_dir)
 
 		# Make sure linking has happened
@@ -370,6 +371,22 @@ class Maker:
 			else:
 				self._link_files(source, target)
 
+	# Handle unlink
+	def _unlink(self):
+		if not "link" in self.settings:
+			return
+		for tuple in self.settings['link']:
+			source, target = tuple.items()[0]
+			target = self.final_build_dir + "/" + target
+			if source.endswith('*'):
+				path = source[:-1]
+				paths = [path + name for name in os.listdir(path) if os.path.isdir(path + name)]
+				for source in paths:
+					self._unlink_files(target + "/" + os.path.basename(source))
+			else:
+				self._unlink_files(target)
+
+
 	# Handle copy
 	def _copy(self):
 		if not "copy" in self.settings:
@@ -479,6 +496,13 @@ class Maker:
 		else:
 			raise BuildError("Can't link " + source + " to " + target + ". Make sure that the source exists.")
 
+	# Unlink file from target
+	def _unlink_files(self, target):
+		self._ensure_container(target)
+		if os.path.exists(target):
+			os.unlink(target)
+
+
 	# Copy file from source to target
 	def _copy_files(self, source, target):
 		self._ensure_container(target)
@@ -501,6 +525,8 @@ def help():
 	print '			Print this help'
 	print ' -c --config'
 	print '			Configuration file to use, defaults to conf/site.yml'
+	print ' -o --commands'
+	print '			Configuration file to use, defaults to conf/commands.yml'
 	print ' -s --skip-backup'
 	print '			Do not take backups, ever'
 	print ' -d --disable-cache'
@@ -518,11 +544,12 @@ def main(argv):
 
 	# Default configuration file to use:
 	config_file = 'conf/site.yml'
+	commands_file = 'conf/commands.yml'
 	do_build = True
 
 	# Parse options:
 	try:
-		opts, args = getopt.getopt(argv, "hdc:vst", ["help", "config=", "version", "test", "skip-backup", "disable-cache"])
+		opts, args = getopt.getopt(argv, "hdc:o:vst", ["help", "config=", "commands=", "version", "test", "skip-backup", "disable-cache"])
 	except getopt.GetoptError:
 		help()
 		return
@@ -533,6 +560,8 @@ def main(argv):
 			return
 		elif opt in ("-c", "--config"):
 			config_file = arg
+		elif opt in ("-o", "--commands"):
+			commands_file = arg
 		elif opt in ("-s", "--skip-backup"):
 			global build_sh_skip_backup
 			build_sh_skip_backup = True
@@ -595,22 +624,37 @@ def main(argv):
 
 			# Create the site maker based on the settings
 			maker = Maker(site_settings)
-			settings['commands']['test'] = {"test": "test"}
 
 			maker.notice("Using configuration " + site)
 
+			commands = {}
+
+			if 'commands' in settings:
+				commands = settings['commands']
+				maker.warning("There are commands defined in site.yml - please move them to commands.yml.")
+
+			# Read in the commands file
+			if os.path.isfile(commands_file):
+				if 'commands' in settings:
+					maker.warning("Commands defined in commands.yml override the commands defined in site.yml")
+				f = open(commands_file)
+				commands = yaml.safe_load(f)
+				f.close()
+
+			commands['test'] = {"test": "test"}
+
 			# Add and overwrite commands with local_commands
 			if 'local_commands' in settings[site]:
-				settings['commands'].update(settings[site]['local_commands'])
+				commands.update(settings[site]['local_commands'])
 
 			if do_build:
 				# Execute the command(s).
-				if command in settings['commands']:
-					command_set = settings['commands'][command]
+				if command in commands:
+					command_set = commands[command]
 					for step in command_set:
 						maker.execute(step)
 				else:
-					print "No such command defined as '" + command + "'"
+					maker.notice("No such command defined as '" + command + "'")
 
 
 	except Exception, errtxt:
