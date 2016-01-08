@@ -3,6 +3,9 @@ build.sh
 
 By the Wunderful People at Wunderkraut
 
+Released under GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007, see COPYING
+for details.
+
 --
 
 build.sh is a tool for making, updating and managing Drupal installations from the development phase up to production.
