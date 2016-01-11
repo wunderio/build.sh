@@ -12,8 +12,9 @@ default:
   #   - mylocalbox
   aliases: vagrant
 
-  # The drush make file to use
-  makefile: conf/site.make
+  # Omit makefile to leave out drush
+  # makefile: conf/site.make
+  type: composer
 
   # Directory used to build the site
   temporary: _build
@@ -34,51 +35,14 @@ default:
 
   # In development environments we usually want to use symlinks, note the settings.php linking
   link:
+    - conf/composer/composer.json: composer.json
     - files: sites/default/files
-    - code/modules: sites/all/modules/custom
-    - code/themes: sites/all/themes/custom
+    - code/modules: modules/custom
+    - code/themes: themes/custom
     - code/profiles/wk: profiles/wk
     - conf/local.settings.php: sites/default/settings.php
 
-# Test environment:
-test:
-
-  aliases: stage
-
-  # Test environment only symlinks files
-  link:
-    - files: sites/default/files
-
-  # Other files are copied, again note the settings.php, in our test enviroment we want to use another settings file.
-  link:
-    - files: sites/default/files
-
   copy:
-    - code/modules: sites/all/modules/custom
-    - code/themes: sites/all/themes/custom
-    - code/profiles/wk: profiles/wk
-    - conf/test.settings.php: sites/default/settings.php
-
-  # We can provide local commands or override global ones.
-  local_commands:
-
-    # Running command ./build.sh hello test will print Hello world!
-    hello:
-      - shell: echo "Hello world!"
-
-# Production environment:
-production:
-
-  aliases: prod
-
-  # Prod environment only symlinks files
-  link:
-    - files: sites/default/files
-
-  # Other files are copied, note settings.php
-  copy:
-    - code/modules: sites/all/modules/custom
-    - code/themes: sites/all/themes/custom
-    - code/profiles/wk: profiles/wk
-    - conf/prod.settings.php: sites/default/settings.php
+    - conf/composer/index.php: index.php
+    - conf/composer/autoload.php: autoload.php
 

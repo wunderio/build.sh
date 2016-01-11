@@ -25,7 +25,7 @@ build_sh_version_string = "build.sh 1.0"
 build_sh_skip_backup = False
 build_sh_disable_cache = False
 
-# Sitt.make item (either a project/library from the site.make)
+# Site.make item (either a project/library from the site.make)
 class MakeItem:
 
 	def __init__(self, type, name):
@@ -88,19 +88,22 @@ class Maker:
 	def __init__(self, settings):
 
 		self.drush = settings.get('drush', 'drush')
+		self.type = settings.get('type', 'drush make')
 		self.temp_build_dir_name = settings['temporary']
 		self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
 		self.final_build_dir_name = settings['final']
 		self.final_build_dir = os.path.abspath(self.final_build_dir_name)
 		self.old_build_dir = os.path.abspath(settings.get('previous', 'previous'))
-		self.makefile = os.path.abspath(settings.get('makefile', 'conf/site.make'))
 		self.profile_name = settings.get('profile', 'standard')
 		self.site_name = settings.get('site', 'A drupal site')
 		self.make_cache_dir = settings.get('make_cache', '.make_cache')
 		self.settings = settings
 		self.store_old_buids = True
 		self.linked = False
-		self.makefile_hash = hashlib.md5(open(self.makefile, 'rb').read()).hexdigest()
+
+		if self.type == 'drush make':
+			self.makefile = os.path.abspath(settings.get('makefile', 'conf/site.make'))
+			self.makefile_hash = hashlib.md5(open(self.makefile, 'rb').read()).hexdigest()
 
 		# See if drush is installed
 		if not self._which('drush'):
@@ -157,6 +160,15 @@ class Maker:
 
 	# Run make
 	def make(self):
+		if self.type == 'drush make':
+			self._drush_make()
+		elif self.type == 'composer':
+			self._composer_make()
+
+	def _composer_make(self):
+		self.notice("Making up stuff as I go")
+
+	def _drush_make(self):
 		global build_sh_disable_cache
 		self._precheck()
 		self.notice("Building")
@@ -236,9 +248,8 @@ class Maker:
 		self.notice("Finalizing new build")
 		if os.path.isdir(self.final_build_dir):
 			self._ensure_writable(self.final_build_dir)
-                        self._unlink()
+			self._unlink()
 			shutil.rmtree(self.final_build_dir)
-
 		# Make sure linking has happened
 		if not self.linked:
 			self.link()
@@ -361,7 +372,7 @@ class Maker:
 		if not "link" in self.settings:
 			return
 		for tuple in self.settings['link']:
-			source, target = tuple.popitem()
+			source, target = tuple.items()[0]
 			target = self.temp_build_dir + "/" + target
 			if source.endswith('*'):
 				path = source[:-1]
@@ -658,7 +669,6 @@ def main(argv):
 
 
 	except Exception, errtxt:
-
 		print "\033[91m** BUILD ERROR: \033[0m%s" % (errtxt)
 		exit(1)
 
