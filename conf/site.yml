@@ -28,7 +28,7 @@ default:
   previous: builds
 
   # Installation profile to use
-  profile: wk
+  profile: config_installer
 
   # Site name given at installation phase
   site: Wundersite
@@ -39,7 +39,6 @@ default:
     - files: sites/default/files
     - code/modules: modules/custom
     - code/themes: themes/custom
-    - code/profiles/wk: profiles/wk
     - conf/local.settings.php: sites/default/settings.php
 
   copy:
