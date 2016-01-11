@@ -87,6 +87,7 @@ class Maker:
 
 	def __init__(self, settings):
 
+		self.composer = settings.get('composer', 'composer')
 		self.drush = settings.get('drush', 'drush')
 		self.type = settings.get('type', 'drush make')
 		self.temp_build_dir_name = settings['temporary']
@@ -166,7 +167,12 @@ class Maker:
 			self._composer_make()
 
 	def _composer_make(self):
-		self.notice("Making up stuff as I go")
+		self._precheck()
+		self.link()
+		self._composer([
+			'-d=' + self.temp_build_dir,
+			'install'
+		]);
 
 	def _drush_make(self):
 		global build_sh_disable_cache
@@ -406,6 +412,13 @@ class Maker:
 			source, target = tuple.popitem()
 			target = self.temp_build_dir + "/" + target
 			self._copy_files(source, target)
+
+	# Execute a composer command
+	def _composer(self, args, quiet = False):
+		if quiet:
+			FNULL = open(os.devnull, 'w')
+			return subprocess.call([self.composer] + args, stdout=FNULL, stderr=FNULL) == 0
+		return subprocess.call([self.composer] + args) == 0
 
 	# Execute a drush command
 	def _drush(self, args, quiet = False):
