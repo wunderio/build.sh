@@ -8,19 +8,23 @@ new:
   - verify: "Type yes to verify you want to build a new installation: "
   - make
   - backup
+  - shell: chmod +R a-w current
   - purge
   - finalize
   - install
   - cleanup
+  - shell: chmod -R a-w current
 
 
 # Basic site update functionality
 update:
   - make
   - backup
+  - shell: chmod +R a-w current
   - finalize
   - update
   - cleanup
+  - shell: chmod -R a-w current
 
 reinstall:
   - shell: cd drupal && drush sql-drop -y
@@ -45,3 +49,10 @@ backup:
       ignore:
         - sites/default/files
 
+hotfix:
+  - link
+  - shell: chmod -R ug+w current
+  - shell: rsync -a _build/ current
+  - shell: rm -r _build
+  - shell: chmod -R a-w current
+  - update
