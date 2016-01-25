@@ -24,5 +24,16 @@
     "require-dev": {
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "extra": {
+        "installer-paths": {
+            "drupal/core": ["type:drupal-core"],
+            "drupal/modules/contrib/{$name}": ["type:drupal-module"],
+            "drupal/profiles/contrib/{$name}": ["type:drupal-profile"],
+            "drupal/themes/contrib/{$name}": ["type:drupal-theme"],
+            "drupal/drush/commands/{$name}": ["type:drupal-drush"]
+        },
+        "patches": {
+        }
+    }
 }

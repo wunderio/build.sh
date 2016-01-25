@@ -22,7 +22,10 @@ default:
   make_cache: .make_cache
 
   # The final produced Drupal installation
-  final: drupal
+  final: current
+
+  # The Subpath of "final" and "temporary" where drupal resides.
+  drupal_subpath: /drupal
 
   # Directory which will house all the previous builds
   previous: builds
@@ -36,12 +39,29 @@ default:
   # In development environments we usually want to use symlinks, note the settings.php linking
   link:
     - conf/composer/composer.json: composer.json
-    - files: sites/default/files
-    - code/modules: modules/custom
-    - code/themes: themes/custom
-    - conf/local.settings.php: sites/default/settings.php
+    - files: drupal/sites/default/files
+    - code/modules: drupal/modules/custom
+    - code/themes: drupal/themes/custom
+    - conf/drupal: config
+    - conf/local.settings.php: drupal/sites/default/settings.php
 
   copy:
-    - conf/composer/index.php: index.php
-    - conf/composer/autoload.php: autoload.php
+    - conf/composer/index.php: drupal/index.php
+    - conf/composer/autoload.php: drupal/autoload.php
+
+production:
+
+  # In development environments we usually want to use symlinks, note the settings.php linking
+  link:
+    - code/modules: drupal/modules/custom
+
+  copy:
+    - conf/composer/index.php: drupal/index.php
+    - conf/composer/autoload.php: drupal/autoload.php
+    - conf/composer/composer.json: composer.json
+    - files: drupal/sites/default/files
+    - code/themes: drupal/themes/custom
+    - conf/drupal: config
+    - conf/local.settings.php: drupal/sites/default/settings.php
+
 
