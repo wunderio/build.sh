@@ -1,0 +1,58 @@
+---
+# Example commands.yml
+
+# The commands available to the command line are defined here.
+
+# Basic new site functionality
+new:
+  - verify: "Type yes to verify you want to build a new installation: "
+  - make
+  - backup
+  - shell: chmod +R a-w current
+  - purge
+  - finalize
+  - install
+  - cleanup
+  - shell: chmod -R a-w current
+
+
+# Basic site update functionality
+update:
+  - make
+  - backup
+  - shell: chmod +R a-w current
+  - finalize
+  - update
+  - cleanup
+  - shell: chmod -R a-w current
+
+reinstall:
+  - shell: cd drupal && drush sql-drop -y
+
+purge:
+  - purge
+
+# This is just an example on how to create custom commands,
+# this will create a .tgz out of the drupal installation without
+# touching the current installation.
+package:
+  - make
+  - shell: cp conf/_ping.php _build
+  - shell: tar cvfz package.tgz _build
+  - shell: rm -rf _build
+
+# An example on how to use create a simple backup command
+# that will skip database and files dir
+backup:
+  - backup:
+      skip-database: yes
+      ignore:
+        - sites/default/files
+
+hotfix:
+  - link
+  - shell: chmod -R ug+w current
+  - shell: rsync -a _build/ current
+  - shell: rm -r _build
+  - shell: chmod -R a-w current
+  - update
