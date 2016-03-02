@@ -253,8 +253,8 @@ class Maker:
 	def finalize(self):
 		self.notice("Finalizing new build")
 		if os.path.isdir(self.final_build_dir):
-			self._ensure_writable(self.final_build_dir)
 			self._unlink()
+			self._ensure_writable(self.final_build_dir)
 			shutil.rmtree(self.final_build_dir)
 		# Make sure linking has happened
 		if not self.linked:
