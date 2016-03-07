@@ -37,7 +37,6 @@ purge:
 # touching the current installation.
 package:
   - make
-  - copy
   - link
   #example: - shell: rm -rf _build/sites/all/themes/custom/<themename>/node_modules
   - shell: cp conf/_ping.php _build
