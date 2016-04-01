@@ -8,7 +8,7 @@ new:
   - verify: "Type yes to verify you want to build a new installation: "
   - make
   - backup
-  - shell: chmod +R a-w current
+  - shell: chmod -R a+w current
   - purge
   - finalize
   - install
@@ -20,7 +20,7 @@ new:
 update:
   - make
   - backup
-  - shell: chmod +R a-w current
+  - shell: chmod -R a+w current
   - finalize
   - update
   - cleanup
