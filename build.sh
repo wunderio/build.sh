@@ -90,6 +90,7 @@ class Maker:
 		self.composer = settings.get('composer', 'composer')
 		self.drush = settings.get('drush', 'drush')
 		self.type = settings.get('type', 'drush make')
+		self.drupal_subpath = settings.get('drupal_subpath', '')
 		self.temp_build_dir_name = settings['temporary']
 		self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
 		self.final_build_dir_name = settings['final']
@@ -276,7 +277,7 @@ class Maker:
 	# Run install
 	def install(self):
 		if not self._drush([
-			"--root=" + format(self.final_build_dir),
+			"--root=" + format(self.final_build_dir + self.drupal_subpath),
 			"site-install",
 			self.profile_name,
 			"install_configure_form.update_status_module='array(FALSE,FALSE)'"
@@ -290,7 +291,7 @@ class Maker:
 	# Update existing final build
 	def update(self):
 		if self._drush([
-			"--root=" + format(self.final_build_dir),
+			"--root=" + format(self.final_build_dir + self.drupal_subpath),
 			'updatedb',
 			'--y'
 		]):
@@ -453,7 +454,7 @@ class Maker:
 			gzdump_file = self.final_build_dir + '/db.sql.gz'
 
 			if self._drush([
-				"--root=" + format(self.final_build_dir),
+				"--root=" + format(self.final_build_dir + self.drupal_subpath),
 				'sql-dump',
 				'--result-file=' + dump_file
 			], True):
@@ -482,7 +483,7 @@ class Maker:
 	# Wipe existing final build
 	def _wipe(self):
 		if self._drush([
-			'--root=' + format(self.final_build_dir),
+			'--root=' + format(self.final_build_dir + self.drupal_subpath),
 			'sql-drop',
 			'--y'
 		], True):
