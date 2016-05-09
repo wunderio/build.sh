@@ -262,7 +262,8 @@ class Maker:
 		if not self.linked:
 			self.link()
 		os.rename(self.temp_build_dir, self.final_build_dir)
-		shutil.rmtree(self.final_build_dir_bak)
+		if os.path.isdir(self.final_build_dir_bak):
+			shutil.rmtree(self.final_build_dir_bak)
 
 	# Print notice
 	def notice(self, *args):
