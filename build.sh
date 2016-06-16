@@ -90,10 +90,12 @@ class Maker:
 		self.composer = settings.get('composer', 'composer')
 		self.drush = settings.get('drush', 'drush')
 		self.type = settings.get('type', 'drush make')
+		self.drupal_subpath = settings.get('drupal_subpath', '')
 		self.temp_build_dir_name = settings['temporary']
 		self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
 		self.final_build_dir_name = settings['final']
 		self.final_build_dir = os.path.abspath(self.final_build_dir_name)
+		self.final_build_dir_bak = self.final_build_dir + "_bak"
 		self.old_build_dir = os.path.abspath(settings.get('previous', 'previous'))
 		self.profile_name = settings.get('profile', 'standard')
 		self.site_name = settings.get('site', 'A drupal site')
@@ -193,7 +195,7 @@ class Maker:
 			if not self._drush(self._collect_make_args()):
 				raise BuildError("Make failed - check your makefile")
 
-			#os.remove(self.temp_build_dir + "/sites/default/default.settings.php")
+			os.remove(self.temp_build_dir + "/sites/default/default.settings.php")
 
 			if not os.path.isdir(self.make_cache_dir):
 				os.makedirs(self.make_cache_dir)
@@ -255,11 +257,13 @@ class Maker:
 		if os.path.isdir(self.final_build_dir):
 			self._unlink()
 			self._ensure_writable(self.final_build_dir)
-			shutil.rmtree(self.final_build_dir)
+			os.rename(self.final_build_dir, self.final_build_dir_bak)
 		# Make sure linking has happened
 		if not self.linked:
 			self.link()
 		os.rename(self.temp_build_dir, self.final_build_dir)
+		if os.path.isdir(self.final_build_dir_bak):
+			shutil.rmtree(self.final_build_dir_bak)
 
 	# Print notice
 	def notice(self, *args):
@@ -276,7 +280,7 @@ class Maker:
 	# Run install
 	def install(self):
 		if not self._drush([
-			"--root=" + format(self.final_build_dir),
+			"--root=" + format(self.final_build_dir + self.drupal_subpath),
 			"site-install",
 			self.profile_name,
 			"install_configure_form.update_status_module='array(FALSE,FALSE)'"
@@ -290,7 +294,7 @@ class Maker:
 	# Update existing final build
 	def update(self):
 		if self._drush([
-			"--root=" + format(self.final_build_dir),
+			"--root=" + format(self.final_build_dir + self.drupal_subpath),
 			'updatedb',
 			'--y'
 		]):
@@ -453,7 +457,7 @@ class Maker:
 			gzdump_file = self.final_build_dir + '/db.sql.gz'
 
 			if self._drush([
-				"--root=" + format(self.final_build_dir),
+				"--root=" + format(self.final_build_dir + self.drupal_subpath),
 				'sql-dump',
 				'--result-file=' + dump_file
 			], True):
@@ -482,7 +486,7 @@ class Maker:
 	# Wipe existing final build
 	def _wipe(self):
 		if self._drush([
-			'--root=' + format(self.final_build_dir),
+			'--root=' + format(self.final_build_dir + self.drupal_subpath),
 			'sql-drop',
 			'--y'
 		], True):
