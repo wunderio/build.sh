@@ -8,23 +8,23 @@ new:
   - verify: "Type yes to verify you want to build a new installation: "
   - make
   - backup
-  - shell: chmod -R a+w current
+  - shell: chmod -R a+w drupal
   - purge
   - finalize
   - install
   - cleanup
-  - shell: chmod -R a-w current
+  - shell: chmod -R a-w drupal
 
 
 # Basic site update functionality
 update:
   - make
   - backup
-  - shell: chmod -R a+w current
+  - shell: chmod -R a+w drupal
   - finalize
   - update
   - cleanup
-  - shell: chmod -R a-w current
+  - shell: chmod -R a-w drupal
 
 reinstall:
   - shell: cd drupal && drush sql-drop -y
@@ -51,8 +51,8 @@ backup:
 
 hotfix:
   - link
-  - shell: chmod -R ug+w current
-  - shell: rsync -a _build/ current
+  - shell: chmod -R ug+w drupal
+  - shell: rsync -a _build/ drupal
   - shell: rm -r _build
-  - shell: chmod -R a-w current
+  - shell: chmod -R a-w drupal
   - update
