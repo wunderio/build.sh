@@ -50,9 +50,6 @@ test:
     - files: sites/default/files
 
   # Other files are copied, again note the settings.php, in our test enviroment we want to use another settings file.
-  link:
-    - files: sites/default/files
-
   copy:
     - code/modules: sites/all/modules/custom
     - code/themes: sites/all/themes/custom
