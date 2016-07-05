@@ -18,6 +18,7 @@ import stat
 import re
 import gzip
 import tarfile
+import time
 
 # Build scripts version string.
 build_sh_version_string = "build.sh 1.0"
@@ -95,7 +96,7 @@ class Maker:
 		self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
 		self.final_build_dir_name = settings['final']
 		self.final_build_dir = os.path.abspath(self.final_build_dir_name)
-		self.final_build_dir_bak = self.final_build_dir + "_bak"
+		self.final_build_dir_bak = self.final_build_dir + "_bak_" + time.time() 
 		self.old_build_dir = os.path.abspath(settings.get('previous', 'previous'))
 		self.profile_name = settings.get('profile', 'standard')
 		self.site_name = settings.get('site', 'A drupal site')
@@ -226,7 +227,6 @@ class Maker:
 			self._backup(params)
 
 	def cleanup(self):
-		import time
 		compare = time.time() - (60*60*24)
 		for f in os.listdir(self.old_build_dir):
 			fullpath = os.path.join(self.old_build_dir, f)
@@ -263,7 +263,7 @@ class Maker:
 			self.link()
 		os.rename(self.temp_build_dir, self.final_build_dir)
 		if os.path.isdir(self.final_build_dir_bak):
-			shutil.rmtree(self.final_build_dir_bak)
+			shutil.rmtree(self.final_build_dir_bak, True)
 
 	# Print notice
 	def notice(self, *args):
