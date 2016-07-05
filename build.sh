@@ -96,7 +96,7 @@ class Maker:
 		self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
 		self.final_build_dir_name = settings['final']
 		self.final_build_dir = os.path.abspath(self.final_build_dir_name)
-		self.final_build_dir_bak = self.final_build_dir + "_bak_" + time.time() 
+		self.final_build_dir_bak = self.final_build_dir + "_bak_" + str(time.time()) 
 		self.old_build_dir = os.path.abspath(settings.get('previous', 'previous'))
 		self.profile_name = settings.get('profile', 'standard')
 		self.site_name = settings.get('site', 'A drupal site')
