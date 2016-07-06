@@ -56,3 +56,8 @@ hotfix:
   - shell: rm -r _build
   - shell: chmod -R a-w current
   - update
+
+# Sometimes the build leaves crap behind and this command can be used to
+# clean it up.
+cleanup:
+  - shell: sudo rm -rf *_bak*
