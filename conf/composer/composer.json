@@ -16,24 +16,42 @@
         }
     ],
     "require": {
-        "drupal/core": "8.0.*",
-        "drush/drush": "~8.0",
+        "composer/installers": "^1.0.20",
+        "drupal-composer/drupal-scaffold": "^1.3.1",
+        "cweagans/composer-patches": "~1.0",
+        "drupal/core": "^8.1",
+        "drush/drush": "8.1.2",
         "drupal/console": "~0.10",
         "drupal/config_installer": "^8.1"
     },
     "require-dev": {
+        "behat/mink": "~1.6",
+        "behat/mink-goutte-driver": "~1.2",
+        "jcalderonzumba/gastonjs": "^1.1@dev",
+        "jcalderonzumba/mink-phantomjs-driver": "~0.3.1",
+        "mikey179/vfsStream": "~1.2",
+        "phpunit/phpunit": "~4.8",
+        "symfony/css-selector": "2.7.*"
+    },
+    "conflict": {
+        "drupal/drupal": "*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "extra": {
         "installer-paths": {
-            "drupal/core": ["type:drupal-core"],
-            "drupal/modules/contrib/{$name}": ["type:drupal-module"],
-            "drupal/profiles/contrib/{$name}": ["type:drupal-profile"],
-            "drupal/themes/contrib/{$name}": ["type:drupal-theme"],
-            "drupal/drush/commands/{$name}": ["type:drupal-drush"]
+            "web/core": ["type:drupal-core"],
+            "web/modules/contrib/{$name}": ["type:drupal-module"],
+            "web/profiles/contrib/{$name}": ["type:drupal-profile"],
+            "web/themes/contrib/{$name}": ["type:drupal-theme"],
+            "web/drush/commands/{$name}": ["type:drupal-drush"]
         },
         "patches": {
         }
+    },
+    "scripts": {
+      "post-install-cmd": [
+        "DrupalComposer\\DrupalScaffold\\Plugin::scaffold"
+      ]
     }
 }
