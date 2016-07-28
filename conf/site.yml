@@ -25,8 +25,7 @@ default:
   final: current
 
   # The Subpath of "final" and "temporary" where drupal resides.
-  drupal_subpath: /drupal
-
+  drupal_subpath: /web
   # Directory which will house all the previous builds
   previous: builds
 
@@ -36,32 +35,34 @@ default:
   # Site name given at installation phase
   site: Wundersite
 
+local:
   # In development environments we usually want to use symlinks, note the settings.php linking
   link:
     - conf/composer/composer.json: composer.json
-    - files: drupal/sites/default/files
-    - code/modules: drupal/modules/custom
-    - code/themes: drupal/themes/custom
-    - conf/drupal: config
-    - conf/local.settings.php: drupal/sites/default/settings.php
+    - conf/composer/composer.lock: composer.lock
+    - files: web/sites/default/files
+    - code/modules: web/modules/custom
+    - code/themes: web/themes/custom
+    - staging: staging
 
   copy:
-    - conf/composer/index.php: drupal/index.php
-    - conf/composer/autoload.php: drupal/autoload.php
+    - conf/services.yml: web/sites/default/services.yml
+    - conf/settings.php: web/sites/default/settings.php
+    - conf/settings.local.php: web/sites/default/settings.local.php
+    - conf/composer/autoload.php: web/autoload.php
 
 production:
 
-  # In development environments we usually want to use symlinks, note the settings.php linking
   link:
-    - code/modules: drupal/modules/custom
+    - files: web/sites/default/files
 
   copy:
-    - conf/composer/index.php: drupal/index.php
-    - conf/composer/autoload.php: drupal/autoload.php
+    - code/modules: web/modules
+    - code/themes: web/themes
+    - conf/composer/autoload.php: web/autoload.php
     - conf/composer/composer.json: composer.json
-    - files: drupal/sites/default/files
-    - code/themes: drupal/themes/custom
-    - conf/drupal: config
-    - conf/local.settings.php: drupal/sites/default/settings.php
-
-
+    - conf/composer/composer.lock: composer.lock
+    - staging: staging
+    - conf/settings.php: web/sites/default/settings.php
+    - conf/prod.settings.php: web/sites/default/settings.local.php
+    - conf/services.yml: web/sites/default/services.yml
