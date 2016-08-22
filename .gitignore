@@ -1,5 +1,5 @@
 .DS_Store
 .make_cache
 builds
-drupal
+current
 drupal.sqlite
