@@ -27,7 +27,7 @@ update:
   - shell: chmod -R a-w current
 
 reinstall:
-  - shell: cd drupal && drush sql-drop -y
+  - shell: cd current && drush sql-drop -y
 
 purge:
   - purge

@@ -21,7 +21,7 @@ default:
   make_cache: .make_cache
 
   # The final produced Drupal installation
-  final: drupal
+  final: current
 
   # Directory which will house all the previous builds
   previous: builds
