@@ -19,6 +19,8 @@ import re
 import gzip
 import tarfile
 import time
+import random
+import string
 
 # Build scripts version string.
 build_sh_version_string = "build.sh 1.0"
@@ -361,6 +363,8 @@ class Maker:
 			self.link()
 		elif step == 'test':
 			self.test()
+                elif step == 'passwd':
+                        self.passwd()
 		else:
 			print "Unknown step " + step
 
@@ -425,10 +429,12 @@ class Maker:
 		return subprocess.call([self.composer] + args) == 0
 
 	# Execute a drush command
-	def _drush(self, args, quiet = False):
+	def _drush(self, args, quiet = False, output = False):
 		if quiet:
 			FNULL = open(os.devnull, 'w')
 			return subprocess.call([self.drush] + args, stdout=FNULL, stderr=FNULL) == 0
+                if output:
+                        return subprocess.check_output([self.drush] + args)
 		return subprocess.call([self.drush] + args) == 0
 
 	# Ensure directories exist
@@ -482,10 +488,29 @@ class Maker:
 		tar.add(self.final_build_dir, arcname=self.final_build_dir_name, exclude=self._backup_exlude)
 		tar.close()
 
+        def passwd(self):
+            query = "SELECT name from users WHERE uid=1"
+            uid1_name = self._drush(['--root=' + format(self.final_build_dir + self.drupal_subpath),
+            'sqlq',
+            query
+            ], False, True)
 
-	# Wipe existing final build
-	def _wipe(self):
-		if self._drush([
+            char_set = string.printable
+            password = ''.join(random.sample(char_set*6, 16))
+
+            if self._drush([
+                '--root=' + format(self.final_build_dir + self.drupal_subpath),
+                'upwd',
+                uid1_name,
+                '--password="' + password + '"'
+                ], True):
+                self.notice("UID 1 password changed")
+            else:
+                self.warning("UID 1 password not changed!")
+
+        # Wipe existing final build
+        def _wipe(self):
+            if self._drush([
 			'--root=' + format(self.final_build_dir + self.drupal_subpath),
 			'sql-drop',
 			'--y'
