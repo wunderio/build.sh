@@ -324,6 +324,12 @@ class Maker:
 		else:
 			return os.system(command) == 0
 
+	# Execute a drush command
+	def drush_command(self, command):
+            drush_command = ['--root=' + format(self.final_build_dir + self.drupal_subpath)] + command.split(' ')
+            return self._drush(drush_command, False)
+
+
 	def append(self, command):
 		files = command.split(">")
 		if len(files) > 1:
@@ -365,6 +371,8 @@ class Maker:
 			self.test()
                 elif step == 'passwd':
                         self.passwd()
+                elif step == 'drush':
+                        self.drush_command(command)
 		else:
 			print "Unknown step " + step
 
