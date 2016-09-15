@@ -511,19 +511,19 @@ class Maker:
         # Wipe existing final build
         def _wipe(self):
             if self._drush([
-			'--root=' + format(self.final_build_dir + self.drupal_subpath),
-			'sql-drop',
-			'--y'
-		], True):
-			self.notice("Tables dropped")
-		else:
-			self.notice("No tables dropped")
-		if os.path.isdir(self.final_build_dir):
- 			self._unlink()
- 			self._ensure_writable(self.final_build_dir)
- 			os.rename(self.final_build_dir, self.final_build_dir_bak)
- 		if os.path.isdir(self.final_build_dir_bak):
- 			shutil.rmtree(self.final_build_dir_bak, True)
+                    '--root=' + format(self.final_build_dir + self.drupal_subpath),
+                    'sql-drop',
+                    '--y'
+            ], True):
+                    self.notice("Tables dropped")
+            else:
+                    self.notice("No tables dropped")
+            if os.path.isdir(self.final_build_dir):
+                    self._unlink()
+                    self._ensure_writable(self.final_build_dir)
+                    os.rename(self.final_build_dir, self.final_build_dir_bak)
+            if os.path.isdir(self.final_build_dir_bak):
+                    shutil.rmtree(self.final_build_dir_bak, True)
 
 	# Ensure we have write access to the given dir
 	def _ensure_writable(self, path):
