@@ -21,7 +21,7 @@ default:
   make_cache: .make_cache
 
   # The final produced Drupal installation
-  final: drupal
+  final: current
 
   # Directory which will house all the previous builds
   previous: builds
@@ -39,6 +39,7 @@ default:
     - code/themes: sites/all/themes/custom
     - code/profiles/wk: profiles/wk
     - conf/local.settings.php: sites/default/settings.php
+    - conf/_ping.php: _ping.php
 
 # Test environment:
 test:
@@ -50,14 +51,12 @@ test:
     - files: sites/default/files
 
   # Other files are copied, again note the settings.php, in our test enviroment we want to use another settings file.
-  link:
-    - files: sites/default/files
-
   copy:
     - code/modules: sites/all/modules/custom
     - code/themes: sites/all/themes/custom
     - code/profiles/wk: profiles/wk
     - conf/test.settings.php: sites/default/settings.php
+    - conf/_ping.php: _ping.php
 
   # We can provide local commands or override global ones.
   local_commands:
@@ -81,4 +80,4 @@ production:
     - code/themes: sites/all/themes/custom
     - code/profiles/wk: profiles/wk
     - conf/prod.settings.php: sites/default/settings.php
-
+    - conf/_ping.php: _ping.php

@@ -27,7 +27,7 @@ update:
   - shell: chmod -R a-w current
 
 reinstall:
-  - shell: cd drupal && drush sql-drop -y
+  - shell: cd current && drush sql-drop -y
 
 purge:
   - purge
@@ -37,6 +37,8 @@ purge:
 # touching the current installation.
 package:
   - make
+  - link
+  #example: - shell: rm -rf _build/sites/all/themes/custom/<themename>/node_modules
   - shell: cp conf/_ping.php _build
   - shell: tar cvfz package.tgz _build
   - shell: rm -rf _build
@@ -56,3 +58,8 @@ hotfix:
   - shell: rm -r _build
   - shell: chmod -R a-w current
   - update
+
+# Sometimes the build leaves crap behind and this command can be used to
+# clean it up.
+cleanup:
+  - shell: sudo rm -rf *_bak*
