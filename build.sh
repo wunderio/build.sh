@@ -101,6 +101,7 @@ class Maker:
 		self.old_build_dir = os.path.abspath(settings.get('previous', 'previous'))
 		self.profile_name = settings.get('profile', 'standard')
 		self.site_name = settings.get('site', 'A drupal site')
+		self.multisite_site = settings.get('multisite_site', 'default')
 		self.make_cache_dir = settings.get('make_cache', '.make_cache')
 		self.settings = settings
 		self.store_old_buids = True
@@ -282,6 +283,8 @@ class Maker:
 	def install(self):
 		if not self._drush([
 			"--root=" + format(self.final_build_dir + self.drupal_subpath),
+			"-l",
+			self.multisite_site,
 			"site-install",
 			self.profile_name,
 			"install_configure_form.update_status_module='array(FALSE,FALSE)'"
@@ -296,6 +299,8 @@ class Maker:
 	def update(self):
 		if self._drush([
 			"--root=" + format(self.final_build_dir + self.drupal_subpath),
+			"-l",
+			self.multisite_site,
 			'updatedb',
 			'--y'
 		]):
