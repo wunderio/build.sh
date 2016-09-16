@@ -31,7 +31,11 @@ default:
 
   # Site name given at installation phase
   site: Wundersite
-
+  
+  # If the site is a multisite system where drupal is bootstrapped from a different directory than
+  # current/sites/default, you can define the folder here. Also note the symlink/copying of sites.php
+  #multisite_site: myspecialsite
+ 
   # In development environments we usually want to use symlinks, note the settings.php linking
   link:
     - files: sites/default/files
@@ -39,6 +43,8 @@ default:
     - code/themes: sites/all/themes/custom
     - code/profiles/wk: profiles/wk
     - conf/local.settings.php: sites/default/settings.php
+    # Only for multisite projects
+    #- conf/sites.php: sites/sites.php
     - conf/_ping.php: _ping.php
 
 # Test environment:
