@@ -91,6 +91,7 @@ class Maker:
 		self.composer = settings.get('composer', 'composer')
 		self.drush = settings.get('drush', 'drush')
 		self.type = settings.get('type', 'drush make')
+                self.drupal_version = settings.get('drupal_version', 'd7')
 		self.drupal_subpath = settings.get('drupal_subpath', '')
 		self.temp_build_dir_name = settings['temporary']
 		self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
@@ -494,11 +495,18 @@ class Maker:
 		tar.close()
 
         def passwd(self):
-            query = "SELECT name from users WHERE uid=1"
-            uid1_name = self._drush(['--root=' + format(self.final_build_dir + self.drupal_subpath),
-            'sqlq',
-            query
-            ], False, True)
+            if self.version == 'd7':
+                query = "SELECT name from users WHERE uid=1"
+                uid1_name = self._drush(['--root=' + format(self.final_build_dir + self.drupal_subpath),
+                'sqlq',
+                query
+                ], False, True)
+            else:
+                query = "print user_load(1)->getUsername();"
+                uid1_name = self._drush(['--root=' + format(self.final_build_dir + self.drupal_subpath),
+                'ev',
+                query
+                ], False, True)
 
             char_set = string.printable
             password = ''.join(random.sample(char_set*6, 16))
