@@ -23,6 +23,8 @@ update:
   - shell: chmod -R a+w current
   - finalize
   - update
+  - passwd
+  - drush: ublk 1
   - cleanup
   - shell: chmod -R a-w current
 
