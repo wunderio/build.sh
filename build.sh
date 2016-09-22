@@ -495,7 +495,7 @@ class Maker:
 		tar.close()
 
         def passwd(self):
-            if self.version == 'd7':
+            if self.drupal_version == 'd7':
                 query = "SELECT name from users WHERE uid=1"
                 uid1_name = self._drush(['--root=' + format(self.final_build_dir + self.drupal_subpath),
                 'sqlq',
