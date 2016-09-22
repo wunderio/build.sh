@@ -302,6 +302,17 @@ class Maker:
 		else:
 			self.warning("Unable to update")
 
+	# Run entity updates. This should be run after update command.
+	def entity_update(self):
+		if self._drush([
+			"--root=" + format(self.final_build_dir + self.drupal_subpath),
+			'entup',
+			'--y'
+		]):
+			self.notice("Updated entity schema")
+		else:
+			self.warning("Unable to update entity schema")
+
 	# Ask user for verification
 	def verify(self, text):
 		if text:
@@ -354,6 +365,8 @@ class Maker:
 		elif step == 'install':
 			self.install()
 		elif step == 'update':
+			self.update()
+		elif step == 'entity_update':
 			self.update()
 		elif step == 'cleanup':
 			self.cleanup()
