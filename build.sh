@@ -495,21 +495,21 @@ class Maker:
         def passwd(self):
             if self.drupal_version == 'd7':
                 query = "SELECT name from users WHERE uid=1"
-                uid1_name = self._drush(
+                uid1_name = self._drush([
                 'sqlq',
-                query,
-                False, True)
+                query
+                ], False, True)
             else:
                 query = "print user_load(1)->getUsername();"
-                uid1_name = self._drush(
+                uid1_name = self._drush([
                 'ev',
-                query,
-                False, True)
+                query
+                ], False, True)
             query = "SELECT name from users WHERE uid=1"
-            uid1_name = self._drush(
+            uid1_name = self._drush([
             'sqlq',
             query
-            , False, True)
+            ], False, True)
             char_set = string.printable
             password = ''.join(random.sample(char_set*6, 16))
 
