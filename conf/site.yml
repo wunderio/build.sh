@@ -15,6 +15,9 @@ default:
   # The drush make file to use
   makefile: conf/site.make
 
+  # Define project Drupal version
+  drupal_version: d7
+
   # Directory used to build the site
   temporary: _build
 
