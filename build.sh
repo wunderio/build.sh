@@ -441,7 +441,6 @@ class Maker:
 			return subprocess.call([self.drush] + bootstrap_args + args, stdout=FNULL, stderr=FNULL) == 0
                 if output:
                         return subprocess.check_output([self.drush] + bootstrap_args + args)
-		print bootstrap_args + args										
 		return subprocess.call([self.drush] + bootstrap_args + args) == 0
 
 	# Ensure directories exist
