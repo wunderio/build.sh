@@ -101,6 +101,7 @@ class Maker:
 		self.old_build_dir = os.path.abspath(settings.get('previous', 'previous'))
 		self.profile_name = settings.get('profile', 'standard')
 		self.site_name = settings.get('site', 'A drupal site')
+		self.multisite_site = settings.get('multisite_site', 'default')
 		self.make_cache_dir = settings.get('make_cache', '.make_cache')
 		self.settings = settings
 		self.store_old_buids = True
@@ -281,7 +282,6 @@ class Maker:
 	# Run install
 	def install(self):
 		if not self._drush([
-			"--root=" + format(self.final_build_dir + self.drupal_subpath),
 			"site-install",
 			self.profile_name,
 			"install_configure_form.update_status_module='array(FALSE,FALSE)'"
@@ -295,7 +295,6 @@ class Maker:
 	# Update existing final build
 	def update(self):
 		if self._drush([
-			"--root=" + format(self.final_build_dir + self.drupal_subpath),
 			'updatedb',
 			'--y'
 		]):
@@ -325,9 +324,8 @@ class Maker:
 
 	# Execute a drush command
 	def drush_command(self, command):
-            drush_command = ['--root=' + format(self.final_build_dir + self.drupal_subpath)] + command.split(' ')
+            drush_command = command.split(' ')
             return self._drush(drush_command, False)
-
 
 	def append(self, command):
 		files = command.split(">")
@@ -437,12 +435,13 @@ class Maker:
 
 	# Execute a drush command
 	def _drush(self, args, quiet = False, output = False):
+		bootstrap_args = ["--root=" + format(self.final_build_dir + self.drupal_subpath), "-l", self.multisite_site]
 		if quiet:
 			FNULL = open(os.devnull, 'w')
-			return subprocess.call([self.drush] + args, stdout=FNULL, stderr=FNULL) == 0
+			return subprocess.call([self.drush] + bootstrap_args + args, stdout=FNULL, stderr=FNULL) == 0
                 if output:
-                        return subprocess.check_output([self.drush] + args)
-		return subprocess.call([self.drush] + args) == 0
+                        return subprocess.check_output([self.drush] + bootstrap_args + args)
+		return subprocess.call([self.drush] + bootstrap_args + args) == 0
 
 	# Ensure directories exist
 	def _precheck(self):
@@ -469,7 +468,6 @@ class Maker:
 			dump_file = self.final_build_dir + '/db.sql'
 
 			if self._drush([
-				"--root=" + format(self.final_build_dir + self.drupal_subpath),
 				'sql-dump',
 				'--result-file=' + dump_file
 			], True):
@@ -497,22 +495,25 @@ class Maker:
         def passwd(self):
             if self.drupal_version == 'd7':
                 query = "SELECT name from users WHERE uid=1"
-                uid1_name = self._drush(['--root=' + format(self.final_build_dir + self.drupal_subpath),
+                uid1_name = self._drush([
                 'sqlq',
                 query
                 ], False, True)
             else:
                 query = "print user_load(1)->getUsername();"
-                uid1_name = self._drush(['--root=' + format(self.final_build_dir + self.drupal_subpath),
+                uid1_name = self._drush([
                 'ev',
                 query
                 ], False, True)
-
+            query = "SELECT name from users WHERE uid=1"
+            uid1_name = self._drush([
+            'sqlq',
+            query
+            ], False, True)
             char_set = string.printable
             password = ''.join(random.sample(char_set*6, 16))
 
             if self._drush([
-                '--root=' + format(self.final_build_dir + self.drupal_subpath),
                 'upwd',
                 uid1_name,
                 '--password="' + password + '"'
@@ -524,7 +525,6 @@ class Maker:
         # Wipe existing final build
         def _wipe(self):
             if self._drush([
-                    '--root=' + format(self.final_build_dir + self.drupal_subpath),
                     'sql-drop',
                     '--y'
             ], True):
