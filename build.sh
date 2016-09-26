@@ -305,7 +305,6 @@ class Maker:
 	# Run entity updates. This should be run after update command.
 	def entity_update(self):
 		if self._drush([
-			"--root=" + format(self.final_build_dir + self.drupal_subpath),
 			'entup',
 			'--y'
 		]):
