@@ -505,11 +505,6 @@ class Maker:
                 'ev',
                 query
                 ], False, True)
-            query = "SELECT name from users WHERE uid=1"
-            uid1_name = self._drush([
-            'sqlq',
-            query
-            ], False, True)
             char_set = string.printable
             password = ''.join(random.sample(char_set*6, 16))
 
