@@ -19,6 +19,7 @@ import tarfile
 import time
 import random
 import string
+from distutils.spawn import find_executable
 
 # Build scripts version string.
 build_sh_version_string = "build.sh 1.0"
@@ -112,31 +113,11 @@ class Maker:
 			self.makefile_hash = hashlib.md5(open(self.makefile, 'rb').read()).hexdigest()
 
 		# See if drush is installed
-		if not self._which('drush'):
+		if not find_executable('drush'):
 			raise BuildError('Drush missing!?')
 
 	def test(self):
 		self._validate_makefile()
-
-	# Check if given program exists
-	# http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
-	def _which(self, program):
-		import os
-		def is_exe(fpath):
-			return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-		fpath, fname = os.path.split(program)
-		if fpath:
-			if is_exe(program):
-				return program
-		else:
-			for path in os.environ["PATH"].split(os.pathsep):
-				path = path.strip('"')
-				exe_file = os.path.join(path, program)
-				if is_exe(exe_file):
-					return exe_file
-
-		return None
 
 	# Quickly validate the drush make file
 	def _validate_makefile(self):
