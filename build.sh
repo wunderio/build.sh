@@ -92,7 +92,7 @@ class Maker:
         self.composer = settings.get('composer', 'composer')
         self.drush = settings.get('drush', 'drush')
         self.type = settings.get('type', 'drush make')
-                self.drupal_version = settings.get('drupal_version', 'd7')
+        self.drupal_version = settings.get('drupal_version', 'd7')
         self.drupal_subpath = settings.get('drupal_subpath', '')
         self.temp_build_dir_name = settings['temporary']
         self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
@@ -347,10 +347,10 @@ class Maker:
             self.link()
         elif step == 'test':
             self.test()
-                elif step == 'passwd':
-                        self.passwd()
-                elif step == 'drush':
-                        self.drush_command(command)
+        elif step == 'passwd':
+            self.passwd()
+        elif step == 'drush':
+            self.drush_command(command)
         else:
             print "Unknown step " + step
 
@@ -420,8 +420,8 @@ class Maker:
         if quiet:
             FNULL = open(os.devnull, 'w')
             return subprocess.call([self.drush] + bootstrap_args + args, stdout=FNULL, stderr=FNULL) == 0
-                if output:
-                        return subprocess.check_output([self.drush] + bootstrap_args + args)
+        if output:
+            return subprocess.check_output([self.drush] + bootstrap_args + args)
         return subprocess.call([self.drush] + bootstrap_args + args) == 0
 
     # Ensure directories exist
