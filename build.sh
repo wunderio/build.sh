@@ -104,6 +104,7 @@ class Maker:
 		self.site_name = settings.get('site', 'A drupal site')
 		self.multisite_site = settings.get('multisite_site', 'default')
 		self.make_cache_dir = settings.get('make_cache', '.make_cache')
+                self.site_env = settings.get('site_env', 'default')
 		self.settings = settings
 		self.store_old_buids = True
 		self.linked = False
@@ -155,10 +156,17 @@ class Maker:
 	def _composer_make(self):
 		self._precheck()
 		self.link()
+
+		params = []
+
+		# Do not install dev packages on non-development environments
+		if self.site_env != 'default' and self.site_env != 'local':
+			params.append('--no-dev')
+
 		self._composer([
 			'-d=' + self.temp_build_dir,
 			'install'
-		]);
+		] + params);
 
 	def _drush_make(self):
 		global build_sh_disable_cache
@@ -667,6 +675,9 @@ def main(argv):
 			# If not the default site, update it with defaults.
 			if site != "default":
 				site_settings.update(settings[site])
+
+			# Pass the site environment name to settings.
+			site_settings['site_env'] = site
 
 			# Create the site maker based on the settings
 			maker = Maker(site_settings)
