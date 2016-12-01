@@ -494,11 +494,11 @@ class Maker:
         else:
             self.notice("No tables dropped")
         if os.path.isdir(self.final_build_dir):
-             self._unlink()
-             self._ensure_writable(self.final_build_dir)
-             os.rename(self.final_build_dir, self.final_build_dir_bak)
-         if os.path.isdir(self.final_build_dir_bak):
-             shutil.rmtree(self.final_build_dir_bak, True)
+            self._unlink()
+            self._ensure_writable(self.final_build_dir)
+            os.rename(self.final_build_dir, self.final_build_dir_bak)
+        if os.path.isdir(self.final_build_dir_bak):
+            shutil.rmtree(self.final_build_dir_bak, True)
 
     # Ensure we have write access to the given dir
     def _ensure_writable(self, path):
