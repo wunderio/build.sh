@@ -652,12 +652,12 @@ def main(argv):
 		# Copy defaults.
 		site_settings = settings["default"].copy()
 
-		if not site in settings:
+		if site not in settings:
 			new_site = False
 			for site_name in settings:
 				if 'aliases' in settings[site_name]:
 					if isinstance(settings[site_name]['aliases'], basestring):
-						site_aliases = [ settings[site_name]['aliases'] ]
+						site_aliases = [settings[site_name]['aliases']]
 					else:
 						site_aliases = settings[site_name]['aliases']
 					if site in site_aliases:
@@ -708,10 +708,10 @@ def main(argv):
 			else:
 				maker.notice("No such command defined as '" + command + "'")
 
-
 	except Exception, errtxt:
 		print "\033[91m** BUILD ERROR: \033[0m%s" % (errtxt)
 		exit(1)
+
 
 # Entry point.
 if __name__ == "__main__":
