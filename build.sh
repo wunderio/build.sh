@@ -481,46 +481,46 @@ class Maker:
         tar.add(self.final_build_dir, arcname=self.final_build_dir_name, exclude=self._backup_exlude)
         tar.close()
 
-        def passwd(self):
-            if self.drupal_version == 'd7':
-                query = "SELECT name from users WHERE uid=1"
-                uid1_name = self._drush([
-                'sqlq',
-                query
-                ], False, True)
-            else:
-                query = "print user_load(1)->getUsername();"
-                uid1_name = self._drush([
-                'ev',
-                query
-                ], False, True)
-            char_set = string.printable
-            password = ''.join(random.sample(char_set*6, 16))
+    def passwd(self):
+        if self.drupal_version == 'd7':
+            query = "SELECT name from users WHERE uid=1"
+            uid1_name = self._drush([
+            'sqlq',
+            query
+            ], False, True)
+        else:
+            query = "print user_load(1)->getUsername();"
+            uid1_name = self._drush([
+            'ev',
+            query
+            ], False, True)
+        char_set = string.printable
+        password = ''.join(random.sample(char_set*6, 16))
 
-            if self._drush([
-                'upwd',
-                uid1_name,
-                '--password="' + password + '"'
-                ], True):
-                self.notice("UID 1 password changed")
-            else:
-                self.warning("UID 1 password not changed!")
-
-        # Wipe existing final build
-        def _wipe(self):
-            if self._drush([
-                    'sql-drop',
-                    '--y'
+        if self._drush([
+            'upwd',
+            uid1_name,
+            '--password="' + password + '"'
             ], True):
-                    self.notice("Tables dropped")
-            else:
-                    self.notice("No tables dropped")
-            if os.path.isdir(self.final_build_dir):
-                    self._unlink()
-                    self._ensure_writable(self.final_build_dir)
-                    os.rename(self.final_build_dir, self.final_build_dir_bak)
-            if os.path.isdir(self.final_build_dir_bak):
-                    shutil.rmtree(self.final_build_dir_bak, True)
+            self.notice("UID 1 password changed")
+        else:
+            self.warning("UID 1 password not changed!")
+
+    def _wipe(self):
+        """Wipe existing final build"""
+        if self._drush([
+                'sql-drop',
+                '--y'
+        ], True):
+                self.notice("Tables dropped")
+        else:
+                self.notice("No tables dropped")
+        if os.path.isdir(self.final_build_dir):
+                self._unlink()
+                self._ensure_writable(self.final_build_dir)
+                os.rename(self.final_build_dir, self.final_build_dir_bak)
+        if os.path.isdir(self.final_build_dir_bak):
+                shutil.rmtree(self.final_build_dir_bak, True)
 
     # Ensure we have write access to the given dir
     def _ensure_writable(self, path):
