@@ -13,10 +13,8 @@ import subprocess
 import shutil
 import hashlib
 import datetime
-import shlex
 import stat
 import re
-import gzip
 import tarfile
 import time
 
@@ -454,7 +452,6 @@ class Maker:
 		else:
 
 			dump_file = self.final_build_dir + '/db.sql'
-			gzdump_file = self.final_build_dir + '/db.sql.gz'
 
 			if self._drush([
 				"--root=" + format(self.final_build_dir + self.drupal_subpath),
