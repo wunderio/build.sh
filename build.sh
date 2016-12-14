@@ -203,7 +203,7 @@ class Maker:
         # Remove default.settings.php
 
     # Existing final build?
-    def hasExistingBuild(self):
+    def has_existing_build(self):
         return os.path.isdir(self.final_build_dir)
 
     # Backup current final build
@@ -215,7 +215,7 @@ class Maker:
         if not params:
             params = {}
         self.notice("Backing up current build")
-        if self.hasExistingBuild():
+        if self.has_existing_build():
             self._backup(params)
 
     def cleanup(self):
@@ -233,7 +233,7 @@ class Maker:
     # Purge current final build
     def purge(self):
         self.notice("Purging current build")
-        if self.hasExistingBuild():
+        if self.has_existing_build():
             self._wipe()
 
     # Link
