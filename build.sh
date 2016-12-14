@@ -13,12 +13,13 @@ import subprocess
 import shutil
 import hashlib
 import datetime
-import shlex
 import stat
 import re
-import gzip
 import tarfile
 import time
+import random
+import string
+from distutils.spawn import find_executable
 
 # Build scripts version string.
 build_sh_version_string = "build.sh 1.0"
@@ -91,6 +92,7 @@ class Maker:
 		self.composer = settings.get('composer', 'composer')
 		self.drush = settings.get('drush', 'drush')
 		self.type = settings.get('type', 'drush make')
+                self.drupal_version = settings.get('drupal_version', 'd7')
 		self.drupal_subpath = settings.get('drupal_subpath', '')
 		self.temp_build_dir_name = settings['temporary']
 		self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
@@ -100,7 +102,9 @@ class Maker:
 		self.old_build_dir = os.path.abspath(settings.get('previous', 'previous'))
 		self.profile_name = settings.get('profile', 'standard')
 		self.site_name = settings.get('site', 'A drupal site')
+		self.multisite_site = settings.get('multisite_site', 'default')
 		self.make_cache_dir = settings.get('make_cache', '.make_cache')
+                self.site_env = settings.get('site_env', 'default')
 		self.settings = settings
 		self.store_old_buids = True
 		self.linked = False
@@ -110,31 +114,11 @@ class Maker:
 			self.makefile_hash = hashlib.md5(open(self.makefile, 'rb').read()).hexdigest()
 
 		# See if drush is installed
-		if not self._which('drush'):
+		if not find_executable('drush'):
 			raise BuildError('Drush missing!?')
 
 	def test(self):
 		self._validate_makefile()
-
-	# Check if given program exists
-	# http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
-	def _which(self, program):
-		import os
-		def is_exe(fpath):
-			return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-		fpath, fname = os.path.split(program)
-		if fpath:
-			if is_exe(program):
-				return program
-		else:
-			for path in os.environ["PATH"].split(os.pathsep):
-				path = path.strip('"')
-				exe_file = os.path.join(path, program)
-				if is_exe(exe_file):
-					return exe_file
-
-		return None
 
 	# Quickly validate the drush make file
 	def _validate_makefile(self):
@@ -172,10 +156,17 @@ class Maker:
 	def _composer_make(self):
 		self._precheck()
 		self.link()
+
+		params = []
+
+		# Do not install dev packages on non-development environments
+		if self.site_env != 'default' and self.site_env != 'local':
+			params.append('--no-dev')
+
 		self._composer([
 			'-d=' + self.temp_build_dir,
 			'install'
-		]);
+		] + params);
 
 	def _drush_make(self):
 		global build_sh_disable_cache
@@ -280,7 +271,6 @@ class Maker:
 	# Run install
 	def install(self):
 		if not self._drush([
-			"--root=" + format(self.final_build_dir + self.drupal_subpath),
 			"site-install",
 			self.profile_name,
 			"install_configure_form.update_status_module='array(FALSE,FALSE)'"
@@ -294,7 +284,6 @@ class Maker:
 	# Update existing final build
 	def update(self):
 		if self._drush([
-			"--root=" + format(self.final_build_dir + self.drupal_subpath),
 			'updatedb',
 			'--y'
 		]):
@@ -321,6 +310,11 @@ class Maker:
 			return True
 		else:
 			return os.system(command) == 0
+
+	# Execute a drush command
+	def drush_command(self, command):
+            drush_command = command.split(' ')
+            return self._drush(drush_command, False)
 
 	def append(self, command):
 		files = command.split(">")
@@ -361,6 +355,10 @@ class Maker:
 			self.link()
 		elif step == 'test':
 			self.test()
+                elif step == 'passwd':
+                        self.passwd()
+                elif step == 'drush':
+                        self.drush_command(command)
 		else:
 			print "Unknown step " + step
 
@@ -425,11 +423,14 @@ class Maker:
 		return subprocess.call([self.composer] + args) == 0
 
 	# Execute a drush command
-	def _drush(self, args, quiet = False):
+	def _drush(self, args, quiet = False, output = False):
+		bootstrap_args = ["--root=" + format(self.final_build_dir + self.drupal_subpath), "-l", self.multisite_site]
 		if quiet:
 			FNULL = open(os.devnull, 'w')
-			return subprocess.call([self.drush] + args, stdout=FNULL, stderr=FNULL) == 0
-		return subprocess.call([self.drush] + args) == 0
+			return subprocess.call([self.drush] + bootstrap_args + args, stdout=FNULL, stderr=FNULL) == 0
+                if output:
+                        return subprocess.check_output([self.drush] + bootstrap_args + args)
+		return subprocess.call([self.drush] + bootstrap_args + args) == 0
 
 	# Ensure directories exist
 	def _precheck(self):
@@ -454,10 +455,8 @@ class Maker:
 		else:
 
 			dump_file = self.final_build_dir + '/db.sql'
-			gzdump_file = self.final_build_dir + '/db.sql.gz'
 
 			if self._drush([
-				"--root=" + format(self.final_build_dir + self.drupal_subpath),
 				'sql-dump',
 				'--result-file=' + dump_file
 			], True):
@@ -482,23 +481,46 @@ class Maker:
 		tar.add(self.final_build_dir, arcname=self.final_build_dir_name, exclude=self._backup_exlude)
 		tar.close()
 
+        def passwd(self):
+            if self.drupal_version == 'd7':
+                query = "SELECT name from users WHERE uid=1"
+                uid1_name = self._drush([
+                'sqlq',
+                query
+                ], False, True)
+            else:
+                query = "print user_load(1)->getUsername();"
+                uid1_name = self._drush([
+                'ev',
+                query
+                ], False, True)
+            char_set = string.printable
+            password = ''.join(random.sample(char_set*6, 16))
 
-	# Wipe existing final build
-	def _wipe(self):
-		if self._drush([
-			'--root=' + format(self.final_build_dir + self.drupal_subpath),
-			'sql-drop',
-			'--y'
-		], True):
-			self.notice("Tables dropped")
-		else:
-			self.notice("No tables dropped")
-		if os.path.isdir(self.final_build_dir):
- 			self._unlink()
- 			self._ensure_writable(self.final_build_dir)
- 			os.rename(self.final_build_dir, self.final_build_dir_bak)
- 		if os.path.isdir(self.final_build_dir_bak):
- 			shutil.rmtree(self.final_build_dir_bak, True)
+            if self._drush([
+                'upwd',
+                uid1_name,
+                '--password="' + password + '"'
+                ], True):
+                self.notice("UID 1 password changed")
+            else:
+                self.warning("UID 1 password not changed!")
+
+        # Wipe existing final build
+        def _wipe(self):
+            if self._drush([
+                    'sql-drop',
+                    '--y'
+            ], True):
+                    self.notice("Tables dropped")
+            else:
+                    self.notice("No tables dropped")
+            if os.path.isdir(self.final_build_dir):
+                    self._unlink()
+                    self._ensure_writable(self.final_build_dir)
+                    os.rename(self.final_build_dir, self.final_build_dir_bak)
+            if os.path.isdir(self.final_build_dir_bak):
+                    shutil.rmtree(self.final_build_dir_bak, True)
 
 	# Ensure we have write access to the given dir
 	def _ensure_writable(self, path):
@@ -654,6 +676,9 @@ def main(argv):
 			if site != "default":
 				site_settings.update(settings[site])
 
+			# Pass the site environment name to settings.
+			site_settings['site_env'] = site
+
 			# Create the site maker based on the settings
 			maker = Maker(site_settings)
 
@@ -696,3 +721,5 @@ def main(argv):
 # Entry point.
 if __name__ == "__main__":
 	main(sys.argv[1:])
+
+# vi:ft=python
