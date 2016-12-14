@@ -2,6 +2,7 @@
 extends: default
 
 rules:
+  braces: disable
   comments: disable
   document-start: disable
   line-length: disable
