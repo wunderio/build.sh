@@ -48,4 +48,3 @@ backup:
       skip-database: yes
       ignore:
         - sites/default/files
-
