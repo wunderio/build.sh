@@ -126,8 +126,7 @@ class Maker:
 
 	# Quickly validate the drush make file
 	def _validate_makefile(self):
-		f = open(self.makefile)
-		if f:
+		with open(self.makefile) as f:
 			content = f.readlines()
 			projects = {}
 			prog = re.compile("^([^\[]*)\[([^\]]*)\]\[([^\]]*)\].*$")
@@ -182,9 +181,8 @@ class Maker:
 		if not build_sh_disable_cache and os.path.exists(packaged_build):
 			# Existing build
 			self.notice("Make file unchanged - unpacking previous make")
-			tar = tarfile.open(packaged_build)
-			tar.extractall()
-			tar.close()
+			with tarfile.open(packaged_build) as tar:
+				tar.extractall()
 
 		else:
 
@@ -196,13 +194,11 @@ class Maker:
 			if not os.path.isdir(self.make_cache_dir):
 				os.makedirs(self.make_cache_dir)
 
-			tar = tarfile.open(packaged_build, "w:gz")
-			tar.add(self.temp_build_dir, arcname=self.temp_build_dir_name)
-			tar.close()
+			with tarfile.open(packaged_build, "w:gz") as tar:
+				tar.add(self.temp_build_dir, arcname=self.temp_build_dir_name)
 
-		# f = open(self.temp_build_dir + "/buildhash", "w")
-		# f.write(self.makefile_hash)
-		# f.close()
+		# with open(self.temp_build_dir + "/buildhash", "w") as f:
+		# 	f.write(self.makefile_hash)
 		# Remove default.settings.php
 
 	# Existing final build?
@@ -478,9 +474,8 @@ class Maker:
 		else:
 			self._build_exclude_files = {}
 
-		tar = tarfile.open(backup_file, "w:gz", dereference=True)
-		tar.add(self.final_build_dir, arcname=self.final_build_dir_name, exclude=self._backup_exlude)
-		tar.close()
+		with tarfile.open(backup_file, "w:gz", dereference=True) as tar:
+			tar.add(self.final_build_dir, arcname=self.final_build_dir_name, exclude=self._backup_exlude)
 
         def passwd(self):
             if self.drupal_version == 'd7':
@@ -627,9 +622,8 @@ def main(argv):
 	try:
 
 		# Get the settings file YAML contents.
-		f = open(config_file)
-		settings = yaml.safe_load(f)
-		f.close()
+		with open(config_file) as f:
+			settings = yaml.safe_load(f)
 
 		try:
 			command = args[0]
@@ -692,9 +686,8 @@ def main(argv):
 			if os.path.isfile(commands_file):
 				if 'commands' in settings:
 					maker.warning("Commands defined in commands.yml override the commands defined in site.yml")
-				f = open(commands_file)
-				commands = yaml.safe_load(f)
-				f.close()
+				with  open(commands_file) as f:
+					commands = yaml.safe_load(f)
 
 			commands['test'] = {"test": "test"}
 
