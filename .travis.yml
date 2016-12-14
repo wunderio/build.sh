@@ -11,9 +11,11 @@ sudo: false
 
 install:
   - travis_retry pip install pyflakes
+  - travis_retry pip install yamllint
 
 script:
   - pyflakes build.sh
+  - yamllint .
 
 after_success:
   - travis_retry pip install pep8
