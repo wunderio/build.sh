@@ -1,7 +1,9 @@
-build.sh
-=================================================
+[![Build Status](https://travis-ci.org/wunderkraut/build.sh.svg)](https://travis-ci.org/wunderkraut/build.sh)
 
-By the Wunderful People at Wunderkraut
+build.sh
+========
+
+By the Wunderful People at Wunder and Friends
 
 Released under GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007, see COPYING
 for details.
@@ -12,7 +14,7 @@ build.sh is a tool for making, updating and managing Drupal installations from t
 
 
 It is built to:
- - Eliminate the need to have 3rd part code in your repository.
+ - Eliminate the need to have 3rd-party code in your repository.
  - Make core and module updates fast and easy.
  - Enhance security of your Drupal installation.
  - Make your life just a little bit easier and worry free.
@@ -25,20 +27,25 @@ Dependencies:
 
 Drush capable of running make commands (latest version should work out of the box).
 
-python + various libraries are required, running ./build.sh should print the help text if everything is OK.
-The only extra library you may have to install is the python yaml library. This should be installable with:
+Python and various libraries are required, running ./build.sh should print the help text if everything is OK.
+The only extra library you may have to install is the Python YAML library. This should be installable with:
 
-$ pip install ...
+```bash
+$ pip install PyYAML
+```
 
 Or if you are using CentOS 6.4:
 
+```bash
 $ yum install PyYAML
+```
 
 Basic usage:
 
 Running build.sh without any parameters will give you a simple help on what you can do.
 
-	$ build.sh [options] [command] [site]
+```bash
+$ build.sh [options] [command] [site]
 
 Options:
  -h --help
@@ -53,29 +60,36 @@ Options:
 			Do not use caches
  -v --version
 			Print version information
+```
 
 Configuration file:
 
-The configuration file is a yaml based file which contains both the site information and commands.
+The configuration file is a YAML based file which contains both the site information and commands.
+
 The site information consists of definitions for temporary build dir, old builds and final builds dir, the used Drupal installation profile name, linking and copying information, etc. See conf/site.yml for examples and more information.
 
 Commands:
 
 A command is a set of steps defined in the configuration file (see conf/commands.yml) therefore commands can vary from configuration to another.
 
-The only hard coded command is test:
+The only hardcoded command is `test`:
+```bash
 $ ./build.sh test
-Would do a simple test on your drush make file to check projects/libraries that are not referencing any direct versions (for example drupal.org module dev versions or github master versions).
+```
+Would do a simple test on your drush make file to check projects/libraries that are not referencing any direct versions (for example drupal.org module dev versions or GitHub master versions).
 
 The example configuration file in conf/commands.yml defines the following commands:
 
+```
  - new
  - update
  - package
  - backup
+```
 
 The provided steps are:
 
+```
  - make
  	Create a temporary Drupal installation based on the drush make file (drush make).
  - backup
@@ -103,20 +117,22 @@ The provided steps are:
  	Tests make file for possible volatile module/library references, in essence this is the same as running ./build.sh test
  - shell
  	Run a shell command (as of version 0.7 input & output redirectors works)
+```
 
 Example of usage:
 
 At the beginning you will always run:
+```bash
 $ ./build.sh new
+```
 This should produces a new fresh Drupal installation. Usually you should use the installation profile as well as Drupal features to enable your sites modules and to configure it.
 
 (Add a new modules to conf/site.make, add update hooks to enable modules to your installation profiles install file, etc).
 
+```bash
 $ ./build.sh update
+```
 This will rebuild the site accordingly from scratch without dropping any databases and finally Drupal update is ran.
-
-
-
 
 About files and directories (-> denotes copying/symlinking):
 
