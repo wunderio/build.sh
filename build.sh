@@ -13,11 +13,13 @@ import subprocess
 import shutil
 import hashlib
 import datetime
-import shlex
 import stat
 import re
-import gzip
 import tarfile
+import time
+import random
+import string
+from distutils.spawn import find_executable
 
 # Build scripts version string.
 build_sh_version_string = "build.sh 1.0"
@@ -25,7 +27,7 @@ build_sh_version_string = "build.sh 1.0"
 build_sh_skip_backup = False
 build_sh_disable_cache = False
 
-# Sitt.make item (either a project/library from the site.make)
+# Site.make item (either a project/library from the site.make)
 class MakeItem:
 
 	def __init__(self, type, name):
@@ -87,47 +89,36 @@ class Maker:
 
 	def __init__(self, settings):
 
+		self.composer = settings.get('composer', 'composer')
 		self.drush = settings.get('drush', 'drush')
+		self.type = settings.get('type', 'drush make')
+                self.drupal_version = settings.get('drupal_version', 'd7')
+		self.drupal_subpath = settings.get('drupal_subpath', '')
 		self.temp_build_dir_name = settings['temporary']
 		self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
 		self.final_build_dir_name = settings['final']
 		self.final_build_dir = os.path.abspath(self.final_build_dir_name)
+		self.final_build_dir_bak = self.final_build_dir + "_bak_" + str(time.time())
 		self.old_build_dir = os.path.abspath(settings.get('previous', 'previous'))
-		self.makefile = os.path.abspath(settings.get('makefile', 'conf/site.make'))
 		self.profile_name = settings.get('profile', 'standard')
 		self.site_name = settings.get('site', 'A drupal site')
+		self.multisite_site = settings.get('multisite_site', 'default')
 		self.make_cache_dir = settings.get('make_cache', '.make_cache')
+                self.site_env = settings.get('site_env', 'default')
 		self.settings = settings
 		self.store_old_buids = True
 		self.linked = False
-		self.makefile_hash = hashlib.md5(open(self.makefile, 'rb').read()).hexdigest()
+
+		if self.type == 'drush make':
+			self.makefile = os.path.abspath(settings.get('makefile', 'conf/site.make'))
+			self.makefile_hash = hashlib.md5(open(self.makefile, 'rb').read()).hexdigest()
 
 		# See if drush is installed
-		if not self._which('drush'):
+		if not find_executable('drush'):
 			raise BuildError('Drush missing!?')
 
 	def test(self):
 		self._validate_makefile()
-
-	# Check if given program exists
-	# http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
-	def _which(self, program):
-		import os
-		def is_exe(fpath):
-			return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-		fpath, fname = os.path.split(program)
-		if fpath:
-			if is_exe(program):
-				return program
-		else:
-			for path in os.environ["PATH"].split(os.pathsep):
-				path = path.strip('"')
-				exe_file = os.path.join(path, program)
-				if is_exe(exe_file):
-					return exe_file
-
-		return None
 
 	# Quickly validate the drush make file
 	def _validate_makefile(self):
@@ -157,6 +148,27 @@ class Maker:
 
 	# Run make
 	def make(self):
+		if self.type == 'drush make':
+			self._drush_make()
+		elif self.type == 'composer':
+			self._composer_make()
+
+	def _composer_make(self):
+		self._precheck()
+		self.link()
+
+		params = []
+
+		# Do not install dev packages on non-development environments
+		if self.site_env != 'default' and self.site_env != 'local':
+			params.append('--no-dev')
+
+		self._composer([
+			'-d=' + self.temp_build_dir,
+			'install'
+		] + params);
+
+	def _drush_make(self):
 		global build_sh_disable_cache
 		self._precheck()
 		self.notice("Building")
@@ -206,7 +218,6 @@ class Maker:
 			self._backup(params)
 
 	def cleanup(self):
-		import time
 		compare = time.time() - (60*60*24)
 		for f in os.listdir(self.old_build_dir):
 			fullpath = os.path.join(self.old_build_dir, f)
@@ -235,13 +246,15 @@ class Maker:
 	def finalize(self):
 		self.notice("Finalizing new build")
 		if os.path.isdir(self.final_build_dir):
+			self._unlink()
 			self._ensure_writable(self.final_build_dir)
-			shutil.rmtree(self.final_build_dir)
-
+			os.rename(self.final_build_dir, self.final_build_dir_bak)
 		# Make sure linking has happened
 		if not self.linked:
 			self.link()
 		os.rename(self.temp_build_dir, self.final_build_dir)
+		if os.path.isdir(self.final_build_dir_bak):
+			shutil.rmtree(self.final_build_dir_bak, True)
 
 	# Print notice
 	def notice(self, *args):
@@ -258,7 +271,6 @@ class Maker:
 	# Run install
 	def install(self):
 		if not self._drush([
-			"--root=" + format(self.final_build_dir),
 			"site-install",
 			self.profile_name,
 			"install_configure_form.update_status_module='array(FALSE,FALSE)'"
@@ -272,7 +284,6 @@ class Maker:
 	# Update existing final build
 	def update(self):
 		if self._drush([
-			"--root=" + format(self.final_build_dir),
 			'updatedb',
 			'--y'
 		]):
@@ -299,6 +310,11 @@ class Maker:
 			return True
 		else:
 			return os.system(command) == 0
+
+	# Execute a drush command
+	def drush_command(self, command):
+            drush_command = command.split(' ')
+            return self._drush(drush_command, False)
 
 	def append(self, command):
 		files = command.split(">")
@@ -339,6 +355,10 @@ class Maker:
 			self.link()
 		elif step == 'test':
 			self.test()
+                elif step == 'passwd':
+                        self.passwd()
+                elif step == 'drush':
+                        self.drush_command(command)
 		else:
 			print "Unknown step " + step
 
@@ -360,7 +380,7 @@ class Maker:
 		if not "link" in self.settings:
 			return
 		for tuple in self.settings['link']:
-			source, target = tuple.popitem()
+			source, target = tuple.items()[0]
 			target = self.temp_build_dir + "/" + target
 			if source.endswith('*'):
 				path = source[:-1]
@@ -369,6 +389,22 @@ class Maker:
 					self._link_files(source, target + "/" + os.path.basename(source))
 			else:
 				self._link_files(source, target)
+
+	# Handle unlink
+	def _unlink(self):
+		if not "link" in self.settings:
+			return
+		for tuple in self.settings['link']:
+			source, target = tuple.items()[0]
+			target = self.final_build_dir + "/" + target
+			if source.endswith('*'):
+				path = source[:-1]
+				paths = [path + name for name in os.listdir(path) if os.path.isdir(path + name)]
+				for source in paths:
+					self._unlink_files(target + "/" + os.path.basename(source))
+			else:
+				self._unlink_files(target)
+
 
 	# Handle copy
 	def _copy(self):
@@ -379,12 +415,22 @@ class Maker:
 			target = self.temp_build_dir + "/" + target
 			self._copy_files(source, target)
 
-	# Execute a drush command
-	def _drush(self, args, quiet = False):
+	# Execute a composer command
+	def _composer(self, args, quiet = False):
 		if quiet:
 			FNULL = open(os.devnull, 'w')
-			return subprocess.call([self.drush] + args, stdout=FNULL, stderr=FNULL) == 0
-		return subprocess.call([self.drush] + args) == 0
+			return subprocess.call([self.composer] + args, stdout=FNULL, stderr=FNULL) == 0
+		return subprocess.call([self.composer] + args) == 0
+
+	# Execute a drush command
+	def _drush(self, args, quiet = False, output = False):
+		bootstrap_args = ["--root=" + format(self.final_build_dir + self.drupal_subpath), "-l", self.multisite_site]
+		if quiet:
+			FNULL = open(os.devnull, 'w')
+			return subprocess.call([self.drush] + bootstrap_args + args, stdout=FNULL, stderr=FNULL) == 0
+                if output:
+                        return subprocess.check_output([self.drush] + bootstrap_args + args)
+		return subprocess.call([self.drush] + bootstrap_args + args) == 0
 
 	# Ensure directories exist
 	def _precheck(self):
@@ -409,10 +455,8 @@ class Maker:
 		else:
 
 			dump_file = self.final_build_dir + '/db.sql'
-			gzdump_file = self.final_build_dir + '/db.sql.gz'
 
 			if self._drush([
-				"--root=" + format(self.final_build_dir),
 				'sql-dump',
 				'--result-file=' + dump_file
 			], True):
@@ -437,19 +481,46 @@ class Maker:
 		tar.add(self.final_build_dir, arcname=self.final_build_dir_name, exclude=self._backup_exlude)
 		tar.close()
 
+        def passwd(self):
+            if self.drupal_version == 'd7':
+                query = "SELECT name from users WHERE uid=1"
+                uid1_name = self._drush([
+                'sqlq',
+                query
+                ], False, True)
+            else:
+                query = "print user_load(1)->getUsername();"
+                uid1_name = self._drush([
+                'ev',
+                query
+                ], False, True)
+            char_set = string.printable
+            password = ''.join(random.sample(char_set*6, 16))
 
-	# Wipe existing final build
-	def _wipe(self):
-		if self._drush([
-			'--root=' + format(self.final_build_dir),
-			'sql-drop',
-			'--y'
-		], True):
-			self.notice("Tables dropped")
-		else:
-			self.notice("No tables dropped")
-		self._ensure_writable(self.final_build_dir)
-		shutil.rmtree(self.final_build_dir)
+            if self._drush([
+                'upwd',
+                uid1_name,
+                '--password="' + password + '"'
+                ], True):
+                self.notice("UID 1 password changed")
+            else:
+                self.warning("UID 1 password not changed!")
+
+        # Wipe existing final build
+        def _wipe(self):
+            if self._drush([
+                    'sql-drop',
+                    '--y'
+            ], True):
+                    self.notice("Tables dropped")
+            else:
+                    self.notice("No tables dropped")
+            if os.path.isdir(self.final_build_dir):
+                    self._unlink()
+                    self._ensure_writable(self.final_build_dir)
+                    os.rename(self.final_build_dir, self.final_build_dir_bak)
+            if os.path.isdir(self.final_build_dir_bak):
+                    shutil.rmtree(self.final_build_dir_bak, True)
 
 	# Ensure we have write access to the given dir
 	def _ensure_writable(self, path):
@@ -479,6 +550,13 @@ class Maker:
 		else:
 			raise BuildError("Can't link " + source + " to " + target + ". Make sure that the source exists.")
 
+	# Unlink file from target
+	def _unlink_files(self, target):
+		self._ensure_container(target)
+		if os.path.exists(target):
+			os.unlink(target)
+
+
 	# Copy file from source to target
 	def _copy_files(self, source, target):
 		self._ensure_container(target)
@@ -501,6 +579,8 @@ def help():
 	print '			Print this help'
 	print ' -c --config'
 	print '			Configuration file to use, defaults to conf/site.yml'
+	print ' -o --commands'
+	print '			Configuration file to use, defaults to conf/commands.yml'
 	print ' -s --skip-backup'
 	print '			Do not take backups, ever'
 	print ' -d --disable-cache'
@@ -518,11 +598,12 @@ def main(argv):
 
 	# Default configuration file to use:
 	config_file = 'conf/site.yml'
+	commands_file = 'conf/commands.yml'
 	do_build = True
 
 	# Parse options:
 	try:
-		opts, args = getopt.getopt(argv, "hdc:vst", ["help", "config=", "version", "test", "skip-backup", "disable-cache"])
+		opts, args = getopt.getopt(argv, "hdc:o:vst", ["help", "config=", "commands=", "version", "test", "skip-backup", "disable-cache"])
 	except getopt.GetoptError:
 		help()
 		return
@@ -533,6 +614,8 @@ def main(argv):
 			return
 		elif opt in ("-c", "--config"):
 			config_file = arg
+		elif opt in ("-o", "--commands"):
+			commands_file = arg
 		elif opt in ("-s", "--skip-backup"):
 			global build_sh_skip_backup
 			build_sh_skip_backup = True
@@ -593,31 +676,50 @@ def main(argv):
 			if site != "default":
 				site_settings.update(settings[site])
 
+			# Pass the site environment name to settings.
+			site_settings['site_env'] = site
+
 			# Create the site maker based on the settings
 			maker = Maker(site_settings)
-			settings['commands']['test'] = {"test": "test"}
 
 			maker.notice("Using configuration " + site)
 
+			commands = {}
+
+			if 'commands' in settings:
+				commands = settings['commands']
+				maker.warning("There are commands defined in site.yml - please move them to commands.yml.")
+
+			# Read in the commands file
+			if os.path.isfile(commands_file):
+				if 'commands' in settings:
+					maker.warning("Commands defined in commands.yml override the commands defined in site.yml")
+				f = open(commands_file)
+				commands = yaml.safe_load(f)
+				f.close()
+
+			commands['test'] = {"test": "test"}
+
 			# Add and overwrite commands with local_commands
 			if 'local_commands' in settings[site]:
-				settings['commands'].update(settings[site]['local_commands'])
+				commands.update(settings[site]['local_commands'])
 
 			if do_build:
 				# Execute the command(s).
-				if command in settings['commands']:
-					command_set = settings['commands'][command]
+				if command in commands:
+					command_set = commands[command]
 					for step in command_set:
 						maker.execute(step)
 				else:
-					print "No such command defined as '" + command + "'"
+					maker.notice("No such command defined as '" + command + "'")
 
 
 	except Exception, errtxt:
-
 		print "\033[91m** BUILD ERROR: \033[0m%s" % (errtxt)
 		exit(1)
 
 # Entry point.
 if __name__ == "__main__":
 	main(sys.argv[1:])
+
+# vi:ft=python

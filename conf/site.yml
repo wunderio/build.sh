@@ -15,13 +15,16 @@ default:
   # The drush make file to use
   makefile: conf/site.make
 
+  # Define project Drupal version
+  drupal_version: d7
+
   # Directory used to build the site
   temporary: _build
 
   make_cache: .make_cache
 
   # The final produced Drupal installation
-  final: drupal
+  final: current
 
   # Directory which will house all the previous builds
   previous: builds
@@ -31,7 +34,11 @@ default:
 
   # Site name given at installation phase
   site: Wundersite
-
+  
+  # If the site is a multisite system where drupal is bootstrapped from a different directory than
+  # current/sites/default, you can define the folder here. Also note the symlink/copying of sites.php
+  #multisite_site: myspecialsite
+ 
   # In development environments we usually want to use symlinks, note the settings.php linking
   link:
     - files: sites/default/files
@@ -39,6 +46,9 @@ default:
     - code/themes: sites/all/themes/custom
     - code/profiles/wk: profiles/wk
     - conf/local.settings.php: sites/default/settings.php
+    # Only for multisite projects
+    #- conf/sites.php: sites/sites.php
+    - conf/_ping.php: _ping.php
 
 # Test environment:
 test:
@@ -50,15 +60,14 @@ test:
     - files: sites/default/files
 
   # Other files are copied, again note the settings.php, in our test enviroment we want to use another settings file.
-  link:
-    - files: sites/default/files
-
   copy:
     - code/modules: sites/all/modules/custom
     - code/themes: sites/all/themes/custom
     - code/profiles/wk: profiles/wk
     - conf/test.settings.php: sites/default/settings.php
+    - conf/_ping.php: _ping.php
 
+  # We can provide local commands or override global ones.
   local_commands:
 
     # Running command ./build.sh hello test will print Hello world!
@@ -80,53 +89,4 @@ production:
     - code/themes: sites/all/themes/custom
     - code/profiles/wk: profiles/wk
     - conf/prod.settings.php: sites/default/settings.php
-
-
-# Command sets:
-commands:
-
-  # Steps:
-  #  - append: conf/robots.txt > current/robots.txt
-
-  # Basic new site functionality
-  new:
-    - verify: "Type yes to verify you want to build a new installation: "
-    - make
-    - backup
-    - purge
-    - finalize
-    - install
-    - cleanup
-
-
-  # Basic site update functionality
-  update:
-    - make
-    - backup
-    - finalize
-    - update
-    - cleanup
-
-  reinstall:
-    - shell: cd drupal && drush sql-drop -y
-
-  purge:
-    - purge
-
-  # This is just an example on how to create custom commands,
-  # this will create a .tgz out of the drupal installation without
-  # touching the current installation.
-  package:
-    - make
-    - shell: cp conf/_ping.php _build
-    - shell: tar cvfz package.tgz _build
-    - shell: rm -rf _build
-
-  # An example on how to use create a simple backup command
-  # that will skip database and files dir
-  backup:
-    - backup:
-        skip-database: yes
-        ignore:
-          - sites/default/files
-
+    - conf/_ping.php: _ping.php
