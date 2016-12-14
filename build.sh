@@ -27,6 +27,7 @@ build_sh_version_string = "build.sh 1.0"
 build_sh_skip_backup = False
 build_sh_disable_cache = False
 
+
 # Site.make item (either a project/library from the site.make)
 class MakeItem:
 
@@ -62,7 +63,8 @@ class MakeItem:
 		if t:
 			self.project_type = t.group(1)
 
-	# Validate site.make item, returns a string describing the issue or False if no issues
+	# Validate site.make item, returns a string describing the issue
+	# or False if no issues
 	def validate(self):
 		if 'type' in self.download_args:
 			version = re.compile(".*[0-9]+\.[0-9]+.*")
@@ -75,6 +77,7 @@ class MakeItem:
 			return "Development version in use (" + self.version + ")"
 		return False
 
+
 # BuildError exception class.
 class BuildError(Exception):
 
@@ -83,6 +86,7 @@ class BuildError(Exception):
 
 	def __str__(self):
 		return repr(self.value)
+
 
 # Maker class.
 class Maker:
@@ -122,8 +126,7 @@ class Maker:
 
 	# Quickly validate the drush make file
 	def _validate_makefile(self):
-		f = open(self.makefile)
-		if f:
+		with open(self.makefile) as f:
 			content = f.readlines()
 			projects = {}
 			prog = re.compile("^([^\[]*)\[([^\]]*)\]\[([^\]]*)\].*$")
@@ -166,21 +169,20 @@ class Maker:
 		self._composer([
 			'-d=' + self.temp_build_dir,
 			'install'
-		] + params);
+		] + params)
 
 	def _drush_make(self):
 		global build_sh_disable_cache
 		self._precheck()
 		self.notice("Building")
 
-		packaged_build = self.make_cache_dir + '/' + self.makefile_hash + '.tgz';
+		packaged_build = self.make_cache_dir + '/' + self.makefile_hash + '.tgz'
 
 		if not build_sh_disable_cache and os.path.exists(packaged_build):
 			# Existing build
 			self.notice("Make file unchanged - unpacking previous make")
-			tar = tarfile.open(packaged_build)
-			tar.extractall()
-			tar.close()
+			with tarfile.open(packaged_build) as tar:
+				tar.extractall()
 
 		else:
 
@@ -192,13 +194,11 @@ class Maker:
 			if not os.path.isdir(self.make_cache_dir):
 				os.makedirs(self.make_cache_dir)
 
-			tar = tarfile.open(packaged_build, "w:gz")
-			tar.add(self.temp_build_dir, arcname=self.temp_build_dir_name)
-			tar.close()
+			with tarfile.open(packaged_build, "w:gz") as tar:
+				tar.add(self.temp_build_dir, arcname=self.temp_build_dir_name)
 
-		# f = open(self.temp_build_dir + "/buildhash", "w")
-		# f.write(self.makefile_hash)
-		# f.close()
+		# with open(self.temp_build_dir + "/buildhash", "w") as f:
+		# 	f.write(self.makefile_hash)
 		# Remove default.settings.php
 
 	# Existing final build?
@@ -218,7 +218,7 @@ class Maker:
 			self._backup(params)
 
 	def cleanup(self):
-		compare = time.time() - (60*60*24)
+		compare = time.time() - (60 * 60 * 24)
 		for f in os.listdir(self.old_build_dir):
 			fullpath = os.path.join(self.old_build_dir, f)
 			if os.stat(fullpath).st_mtime < compare:
@@ -279,7 +279,7 @@ class Maker:
 			"--site-name=" + self.site_name,
 			"-y"
 		]):
-			raise BuildError("Install failed.");
+			raise BuildError("Install failed.")
 
 	# Update existing final build
 	def update(self):
@@ -362,7 +362,6 @@ class Maker:
 		else:
 			print "Unknown step " + step
 
-
 	# Collect make args
 	def _collect_make_args(self):
 		return [
@@ -374,10 +373,9 @@ class Maker:
 			self.temp_build_dir
 		]
 
-
 	# Handle link
 	def _link(self):
-		if not "link" in self.settings:
+		if "link" not in self.settings:
 			return
 		for tuple in self.settings['link']:
 			source, target = tuple.items()[0]
@@ -392,7 +390,7 @@ class Maker:
 
 	# Handle unlink
 	def _unlink(self):
-		if not "link" in self.settings:
+		if "link" not in self.settings:
 			return
 		for tuple in self.settings['link']:
 			source, target = tuple.items()[0]
@@ -405,10 +403,9 @@ class Maker:
 			else:
 				self._unlink_files(target)
 
-
 	# Handle copy
 	def _copy(self):
-		if not "copy" in self.settings:
+		if "copy" not in self.settings:
 			return
 		for tuple in self.settings['copy']:
 			source, target = tuple.popitem()
@@ -416,14 +413,14 @@ class Maker:
 			self._copy_files(source, target)
 
 	# Execute a composer command
-	def _composer(self, args, quiet = False):
+	def _composer(self, args, quiet=False):
 		if quiet:
 			FNULL = open(os.devnull, 'w')
 			return subprocess.call([self.composer] + args, stdout=FNULL, stderr=FNULL) == 0
 		return subprocess.call([self.composer] + args) == 0
 
 	# Execute a drush command
-	def _drush(self, args, quiet = False, output = False):
+	def _drush(self, args, quiet=False, output=False):
 		bootstrap_args = ["--root=" + format(self.final_build_dir + self.drupal_subpath), "-l", self.multisite_site]
 		if quiet:
 			FNULL = open(os.devnull, 'w')
@@ -477,31 +474,27 @@ class Maker:
 		else:
 			self._build_exclude_files = {}
 
-		tar = tarfile.open(backup_file, "w:gz", dereference=True)
-		tar.add(self.final_build_dir, arcname=self.final_build_dir_name, exclude=self._backup_exlude)
-		tar.close()
+		with tarfile.open(backup_file, "w:gz", dereference=True) as tar:
+			tar.add(self.final_build_dir, arcname=self.final_build_dir_name, exclude=self._backup_exlude)
 
         def passwd(self):
             if self.drupal_version == 'd7':
                 query = "SELECT name from users WHERE uid=1"
-                uid1_name = self._drush([
-                'sqlq',
-                query
-                ], False, True)
+                uid1_name = self._drush(['sqlq',
+                                         query
+                                         ], False, True)
             else:
                 query = "print user_load(1)->getUsername();"
-                uid1_name = self._drush([
-                'ev',
-                query
-                ], False, True)
+                uid1_name = self._drush(['ev',
+                                         query
+                                         ], False, True)
             char_set = string.printable
-            password = ''.join(random.sample(char_set*6, 16))
+            password = ''.join(random.sample(char_set * 6, 16))
 
-            if self._drush([
-                'upwd',
-                uid1_name,
-                '--password="' + password + '"'
-                ], True):
+            if self._drush(['upwd',
+                            uid1_name,
+                            '--password="' + password + '"'
+                            ], True):
                 self.notice("UID 1 password changed")
             else:
                 self.warning("UID 1 password not changed!")
@@ -528,11 +521,11 @@ class Maker:
 			for momo in dirs:
 				file = os.path.join(root, momo)
 				mode = os.stat(file).st_mode
-				os.chmod(file, mode|stat.S_IWRITE)
+				os.chmod(file, mode | stat.S_IWRITE)
 			for momo in files:
 				file = os.path.join(root, momo)
 				mode = os.stat(file).st_mode
-				os.chmod(file, mode|stat.S_IWRITE)
+				os.chmod(file, mode | stat.S_IWRITE)
 
 	def _ensure_container(self, filepath):
 		# Ensure target directory exists
@@ -555,7 +548,6 @@ class Maker:
 		self._ensure_container(target)
 		if os.path.exists(target):
 			os.unlink(target)
-
 
 	# Copy file from source to target
 	def _copy_files(self, source, target):
@@ -593,6 +585,7 @@ def help():
 def version():
 	print build_sh_version_string
 
+
 # Program main:
 def main(argv):
 
@@ -629,9 +622,8 @@ def main(argv):
 	try:
 
 		# Get the settings file YAML contents.
-		f = open(config_file)
-		settings = yaml.safe_load(f)
-		f.close()
+		with open(config_file) as f:
+			settings = yaml.safe_load(f)
 
 		try:
 			command = args[0]
@@ -689,9 +681,8 @@ def main(argv):
 		if os.path.isfile(commands_file):
 			if 'commands' in settings:
 				maker.warning("Commands defined in commands.yml override the commands defined in site.yml")
-			f = open(commands_file)
-			commands = yaml.safe_load(f)
-			f.close()
+			with open(commands_file) as f:
+				commands = yaml.safe_load(f)
 
 		commands['test'] = {"test": "test"}
 
