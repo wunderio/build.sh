@@ -1,7 +1,9 @@
+[![Build Status](https://travis-ci.org/wunderkraut/build.sh.svg)](https://travis-ci.org/wunderkraut/build.sh)
+
 build.sh
 ========
 
-By the Wunderful People at Wunderkraut
+By the Wunderful People at Wunder and Friends
 
 Released under GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007, see COPYING
 for details.
