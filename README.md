@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/wunderkraut/build.sh.svg)](https://travis-ci.org/wunderkraut/build.sh)
+[![Build Status](https://travis-ci.org/wunderkraut/build.sh.svg?branch=d8)](https://travis-ci.org/wunderkraut/build.sh)
 
 build.sh
 ========
