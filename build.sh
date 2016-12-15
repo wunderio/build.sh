@@ -20,6 +20,7 @@ import time
 import random
 import string
 from distutils.spawn import find_executable
+from contextlib import closing
 
 # Build scripts version string.
 build_sh_version_string = "build.sh 1.0"
@@ -182,7 +183,7 @@ class Maker:
         if not build_sh_disable_cache and os.path.exists(packaged_build):
             # Existing build
             self.notice("Make file unchanged - unpacking previous make")
-            with tarfile.open(packaged_build) as tar:
+            with closing(tarfile.open(packaged_build)) as tar:
                 tar.extractall()
 
         else:
@@ -195,7 +196,7 @@ class Maker:
             if not os.path.isdir(self.make_cache_dir):
                 os.makedirs(self.make_cache_dir)
 
-            with tarfile.open(packaged_build, "w:gz") as tar:
+            with closing(tarfile.open(packaged_build, "w:gz")) as tar:
                 tar.add(self.temp_build_dir, arcname=self.temp_build_dir_name)
 
         # with open(self.temp_build_dir + "/buildhash", "w") as f:
@@ -475,7 +476,7 @@ class Maker:
         else:
             self._build_exclude_files = {}
 
-        with tarfile.open(backup_file, "w:gz", dereference=True) as tar:
+        with closing(tarfile.open(backup_file, "w:gz", dereference=True)) as tar:
             tar.add(self.final_build_dir, arcname=self.final_build_dir_name, exclude=self._backup_exlude)
 
         def passwd(self):
