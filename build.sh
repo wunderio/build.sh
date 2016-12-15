@@ -22,6 +22,21 @@ import yaml
 from distutils.spawn import find_executable
 from contextlib import closing
 
+try:
+    # Python 2
+    input = raw_input
+except NameError:
+    # Python 3 doesn't have raw_input
+    pass
+
+try:
+    # Python 2
+    basestring
+except NameError:
+    # Python 3 doesn't have basestring
+    basestring = (str, bytes)
+
+
 # Build scripts version string.
 build_sh_version_string = "build.sh 1.0"
 
@@ -299,9 +314,9 @@ class Maker:
     # Ask user for verification
     def verify(self, text):
         if text:
-            response = raw_input(text)
+            response = input(text)
         else:
-            response = raw_input("Type yes to verify that you know what you are doing: ")
+            response = input("Type yes to verify that you know what you are doing: ")
         if response.lower() != "yes":
             raise BuildError("Cancelled by user")
 
