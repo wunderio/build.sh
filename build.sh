@@ -417,16 +417,16 @@ class Maker:
     # Execute a composer command
     def _composer(self, args, quiet=False):
         if quiet:
-            FNULL = open(os.devnull, 'w')
-            return subprocess.call([self.composer] + args, stdout=FNULL, stderr=FNULL) == 0
+            fnull = open(os.devnull, 'w')
+            return subprocess.call([self.composer] + args, stdout=fnull, stderr=fnull) == 0
         return subprocess.call([self.composer] + args) == 0
 
     # Execute a Drush command
     def _drush(self, args, quiet=False, output=False):
         bootstrap_args = ["--root=" + format(self.final_build_dir + self.drupal_subpath), "-l", self.multisite_site]
         if quiet:
-            FNULL = open(os.devnull, 'w')
-            return subprocess.call([self.drush] + bootstrap_args + args, stdout=FNULL, stderr=FNULL) == 0
+            fnull = open(os.devnull, 'w')
+            return subprocess.call([self.drush] + bootstrap_args + args, stdout=fnull, stderr=fnull) == 0
         if output:
             return subprocess.check_output([self.drush] + bootstrap_args + args)
         return subprocess.call([self.drush] + bootstrap_args + args) == 0
