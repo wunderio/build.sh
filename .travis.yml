@@ -21,7 +21,6 @@ matrix:
   - python: 3.5
   - python: 3.4
   - python: 3.3
-  - python: 2.6
 notifications:
   email: false
   slack:
