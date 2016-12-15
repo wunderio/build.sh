@@ -643,68 +643,63 @@ def main(argv):
             else:
                 site = 'default'
 
-        sites = []
-        sites.append(site)
+        # Copy defaults.
+        site_settings = settings["default"].copy()
 
-        for site in sites:
+        if site not in settings:
+            new_site = False
+            for site_name in settings:
+                if 'aliases' in settings[site_name]:
+                    if isinstance(settings[site_name]['aliases'], basestring):
+                        site_aliases = [settings[site_name]['aliases']]
+                    else:
+                        site_aliases = settings[site_name]['aliases']
+                    if site in site_aliases:
+                        new_site = site_name
+                        break
+            if not new_site:
+                raise BuildError("The site " + site + " is not defined")
+            site = new_site
 
-            # Copy defaults.
-            site_settings = settings["default"].copy()
+        # If not the default site, update it with defaults.
+        if site != "default":
+            site_settings.update(settings[site])
 
-            if site not in settings:
-                new_site = False
-                for site_name in settings:
-                    if 'aliases' in settings[site_name]:
-                        if isinstance(settings[site_name]['aliases'], basestring):
-                            site_aliases = [settings[site_name]['aliases']]
-                        else:
-                            site_aliases = settings[site_name]['aliases']
-                        if site in site_aliases:
-                            new_site = site_name
-                            break
-                if not new_site:
-                    raise BuildError("The site " + site + " is not defined")
-                site = new_site
+        # Pass the site environment name to settings.
+        site_settings['site_env'] = site
 
-            # If not the default site, update it with defaults.
-            if site != "default":
-                site_settings.update(settings[site])
+        # Create the site maker based on the settings
+        maker = Maker(site_settings)
 
-            # Pass the site environment name to settings.
-            site_settings['site_env'] = site
+        maker.notice("Using configuration " + site)
 
-            # Create the site maker based on the settings
-            maker = Maker(site_settings)
+        commands = {}
 
-            maker.notice("Using configuration " + site)
+        if 'commands' in settings:
+            commands = settings['commands']
+            maker.warning("There are commands defined in site.yml - please move them to commands.yml.")
 
-            commands = {}
-
+        # Read in the commands file
+        if os.path.isfile(commands_file):
             if 'commands' in settings:
-                commands = settings['commands']
-                maker.warning("There are commands defined in site.yml - please move them to commands.yml.")
+                maker.warning("Commands defined in commands.yml override the commands defined in site.yml")
+            with open(commands_file) as f:
+                commands = yaml.safe_load(f)
 
-            # Read in the commands file
-            if os.path.isfile(commands_file):
-                if 'commands' in settings:
-                    maker.warning("Commands defined in commands.yml override the commands defined in site.yml")
-                with open(commands_file) as f:
-                    commands = yaml.safe_load(f)
+        commands['test'] = {"test": "test"}
 
-            commands['test'] = {"test": "test"}
+        # Add and overwrite commands with local_commands
+        if 'local_commands' in settings[site]:
+            commands.update(settings[site]['local_commands'])
 
-            # Add and overwrite commands with local_commands
-            if 'local_commands' in settings[site]:
-                commands.update(settings[site]['local_commands'])
-
-            if do_build:
-                # Execute the command(s).
-                if command in commands:
-                    command_set = commands[command]
-                    for step in command_set:
-                        maker.execute(step)
-                else:
-                    maker.notice("No such command defined as '" + command + "'")
+        if do_build:
+            # Execute the command(s).
+            if command in commands:
+                command_set = commands[command]
+                for step in command_set:
+                    maker.execute(step)
+            else:
+                maker.notice("No such command defined as '" + command + "'")
 
     except Exception, errtxt:
         print "\033[91m** BUILD ERROR: \033[0m%s" % (errtxt)
