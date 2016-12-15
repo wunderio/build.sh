@@ -705,7 +705,7 @@ def main(argv):
             else:
                 maker.notice("No such command defined as '" + command + "'")
 
-    except Exception, errtxt:
+    except Exception as errtxt:
         print("\033[91m** BUILD ERROR: \033[0m%s" % (errtxt))
         exit(1)
 
