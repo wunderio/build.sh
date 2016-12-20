@@ -468,6 +468,7 @@ class Maker:
 
         name = datetime.datetime.now()
         name = name.isoformat()
+        name = name.replace(":", "_")
 
         backup_file = self.old_build_dir + "/" + name + ".tgz"
 
