@@ -1,33 +1,27 @@
 language: python
-
 python:
-  - 2.7
-  - 3.5
-  - 3.4
-  - 3.3
-
-# Use container-based infrastructure
+- 2.7
+- 3.5
+- 3.4
+- 3.3
+- 2.6
 sudo: false
-
 install:
-  - travis_retry pip install pyflakes
-  - travis_retry pip install yamllint
-
+- travis_retry pip install pyflakes
+- travis_retry pip install yamllint
 script:
-  - pyflakes build.sh
-  - yamllint .
-
+- pyflakes build.sh
+- yamllint .
 after_success:
-  - travis_retry pip install pep8
-  - pep8 --statistics --count build.sh
-
+- travis_retry pip install pep8
+- pep8 --statistics --count build.sh
 matrix:
   fast_finish: true
-
   allow_failures:
-    - python: 3.5
-    - python: 3.4
-    - python: 3.3
-
+  - python: 3.5
+  - python: 3.4
+  - python: 3.3
 notifications:
   email: false
+  slack:
+    secure: Z/JW3zekI7dTw2RBHsVOdRaXYzOl2zaU800i8mJ9txUWNE3B/CYExvw+vlfOewYQV1JGmIwKCAy/JSOAeLEfq6YqxTdTiQAETs01+QRFiC1hbmdmVJNK/nEWCMTESscIuZinUfj1lU8y+xdNwvDM1n3swGG7SSDkYL1WH0MYP8oL+OMGfmz/W+a/w8ZZBWFFmSj4aO94Ujx4d1D7/rdPbTxo6hDo7coqE+p9oaN6Qld/2U2MZ7jSc1HV1xXz0iMr8PlkTO20y0kejq/7zUdeGV+AIqVZmuAj2zYjlyZQReyKQfsKYPiK6A4v5i1tpovfXYd1tZYNBNMJKgIsiz/ODVVa158lF0pl/BCMIqzN5rAIQHiMXA6zkBLwi8C4zcPOqHIIK2aQ01LYdIrjiMewj3eeYfu3HoERL+ipCoSjKfVrUZ/NPq3ygRNekjQyOqGAo7H8yGsfSv+q0wks4b9TajqkMfYWuCB+UBxAI0uOcNdzRUnEs8CZbcrsYWZ+xZJ6GQab0A+jxsGnI5T6B5S+0dXMV5eSnYSVyDjRlvMfPJfbpmOWyH3RRCmT/VG8DovbX8ffh67kQckTyOs2/dFL/thk6uppAkX2BKsJ5zfIYvWpiycSf4Z28ZJRPvNbP2rQ+G9DbL37j52F8FsQZR6DP9D5z4suDu3YCfoh8uSyWP8=
