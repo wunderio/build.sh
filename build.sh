@@ -480,27 +480,27 @@ class Maker:
         with closing(tarfile.open(backup_file, "w:gz", dereference=True)) as tar:
             tar.add(self.final_build_dir, arcname=self.final_build_dir_name, exclude=self._backup_exlude)
 
-        def passwd(self):
-            if self.drupal_version == 'd7':
-                query = "SELECT name from users WHERE uid=1"
-                uid1_name = self._drush(['sqlq',
-                                         query
-                                         ], False, True)
-            else:
-                query = "print user_load(1)->getUsername();"
-                uid1_name = self._drush(['ev',
-                                         query
-                                         ], False, True)
-            char_set = string.printable
-            password = ''.join(random.sample(char_set * 6, 16))
+    def passwd(self):
+        if self.drupal_version == 'd7':
+            query = "SELECT name from users WHERE uid=1"
+            uid1_name = self._drush(['sqlq',
+                                     query
+                                     ], False, True)
+        else:
+            query = "print user_load(1)->getUsername();"
+            uid1_name = self._drush(['ev',
+                                     query
+                                     ], False, True)
+        char_set = string.printable
+        password = ''.join(random.sample(char_set * 6, 16))
 
-            if self._drush(['upwd',
-                            uid1_name,
-                            '--password="' + password + '"'
-                            ], True):
-                self.notice("UID 1 password changed")
-            else:
-                self.warning("UID 1 password not changed!")
+        if self._drush(['upwd',
+                        uid1_name,
+                        '--password="' + password + '"'
+                        ], True):
+            self.notice("UID 1 password changed")
+        else:
+            self.warning("UID 1 password not changed!")
 
     # Wipe existing final build
     def _wipe(self):
