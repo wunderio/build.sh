@@ -4,23 +4,38 @@
 #
 # https://github.com/wunderkraut/build.sh
 # *****************************************************************************
-
-import getopt
-import sys
-import yaml
-import os
-import subprocess
-import shutil
-import hashlib
+from __future__ import print_function
 import datetime
-import stat
+import getopt
+import hashlib
+import os
+import random
 import re
+import shutil
+import stat
+import string
+import subprocess
+import sys
 import tarfile
 import time
-import random
-import string
+import yaml
 from distutils.spawn import find_executable
 from contextlib import closing
+
+try:
+    # Python 2
+    input = raw_input
+except NameError:
+    # Python 3 doesn't have raw_input
+    pass
+
+try:
+    # Python 2
+    basestring
+except NameError:
+    # Python 3 doesn't have basestring
+    basestring = (str, bytes)
+
 
 # Build scripts version string.
 build_sh_version_string = "build.sh 1.0"
@@ -260,15 +275,18 @@ class Maker:
 
     # Print notice
     def notice(self, *args):
-        print "\033[92m** BUILD NOTICE: \033[0m" + ' '.join(str(a) for a in args)
+        print("\033[92m** BUILD NOTICE: \033[0m" + ' '.join(
+            str(a) for a in args))
 
     # Print errror
     def error(self, *args):
-        print "\033[91m** BUILD ERROR: \033[0m" + ' '.join(str(a) for a in args)
+        print("\033[91m** BUILD ERROR: \033[0m" + ' '.join(
+            str(a) for a in args))
 
     # Print warning
     def warning(self, *args):
-        print "\033[93m** BUILD WARNING: \033[0m" + ' '.join(str(a) for a in args)
+        print("\033[93m** BUILD WARNING: \033[0m" + ' '.join(
+            str(a) for a in args))
 
     # Run install
     def install(self):
@@ -296,9 +314,9 @@ class Maker:
     # Ask user for verification
     def verify(self, text):
         if text:
-            response = raw_input(text)
+            response = input(text)
         else:
-            response = raw_input("Type yes to verify that you know what you are doing: ")
+            response = input("Type yes to verify that you know what you are doing: ")
         if response.lower() != "yes":
             raise BuildError("Cancelled by user")
 
@@ -362,7 +380,7 @@ class Maker:
         elif step == 'drush':
             self.drush_command(command)
         else:
-            print "Unknown step " + step
+            print("Unknown step " + step)
 
     # Collect make args
     def _collect_make_args(self):
@@ -574,27 +592,28 @@ class Maker:
 
 # Print help function
 def help():
-    print 'build.sh [options] [command] [site]'
-    print '[command] is one of the commands defined in the configuration file'
-    print '[site] defines the site to build, defaults to default'
-    print 'Options:'
-    print ' -h --help'
-    print '            Print this help'
-    print ' -c --config'
-    print '            Configuration file to use, defaults to conf/site.yml'
-    print ' -o --commands'
-    print '            Configuration file to use, defaults to conf/commands.yml'
-    print ' -s --skip-backup'
-    print '            Do not take backups, ever'
-    print ' -d --disable-cache'
-    print '            Do not use caches'
-    print ' -v --version'
-    print '            Print version information'
+    print('build.sh [options] [command] [site]')
+    print('[command] is one of the commands defined in the configuration file')
+    print('[site] defines the site to build, defaults to default')
+    print('Options:')
+    print(' -h --help')
+    print('            print(this help')
+    print(' -c --config')
+    print('            Configuration file to use, defaults to conf/site.yml')
+    print(' -o --commands')
+    print('            Configuration file to use, '
+          'defaults to conf/commands.yml')
+    print(' -s --skip-backup')
+    print('            Do not take backups, ever')
+    print(' -d --disable-cache')
+    print('            Do not use caches')
+    print(' -v --version')
+    print('            Print version information')
 
 
 # Print version function.
 def version():
-    print build_sh_version_string
+    print(build_sh_version_string)
 
 
 # Program main:
@@ -710,8 +729,8 @@ def main(argv):
             else:
                 maker.notice("No such command defined as '" + command + "'")
 
-    except Exception, errtxt:
-        print "\033[91m** BUILD ERROR: \033[0m%s" % (errtxt)
+    except Exception as errtxt:
+        print("\033[91m** BUILD ERROR: \033[0m%s" % (errtxt))
         exit(1)
 
 
