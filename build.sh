@@ -731,6 +731,9 @@ def main(argv):
 
         commands['test'] = {"test": "test"}
 
+        # Add default overwrite commands with local_commands
+        if 'local_commands' in settings["default"]:
+            commands.update(settings["default"]['local_commands'])
         # Add and overwrite commands with local_commands
         if 'local_commands' in settings[site]:
             commands.update(settings[site]['local_commands'])
