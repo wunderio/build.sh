@@ -179,9 +179,14 @@ class Maker:
 
         params = []
 
-        # Do not install dev packages on non-development environments
-        if self.site_env != 'default' and self.site_env != 'local':
-            params.append('--no-dev')
+        # Check for composer options from environment settings.
+        if 'composer_options' in self.settings:
+            for options in self.settings['composer_options']:
+                option, status = options.popitem()
+
+                # Do not install dev packages.
+                if option == 'no_dev' and status:
+                    params.append('--no-dev')
 
         self._composer([
             '-d=' + self.temp_build_dir,
