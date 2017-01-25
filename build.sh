@@ -163,14 +163,20 @@ class Maker:
         self.link()
 
         params = []
+        method = 'update'
 
         # Do not install dev packages on non-development environments
+        # Use update method on local environment and install on all others
+        # since install method uses an existing composer.lock file whereas
+        # update method runs composer.json and updates composer.lock file.
         if self.site_env != 'default' and self.site_env != 'local':
             params.append('--no-dev')
+            method = 'install'
 
+        self.notice("Run composer " + method)
         self._composer([
             '-d=' + self.temp_build_dir,
-            'install'
+            method
         ] + params)
 
     def _drush_make(self):
