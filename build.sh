@@ -21,6 +21,7 @@ import random
 import string
 from distutils.spawn import find_executable
 from contextlib import closing
+from distutils.dir_util import copy_tree
 
 # Build scripts version string.
 build_sh_version_string = "build.sh 1.0"
@@ -560,7 +561,7 @@ class Maker:
         self._ensure_container(target)
         if os.path.exists(source):
             if os.path.isdir(source):
-                shutil.copytree(source, target)
+                copy_tree(source, target)
             else:
                 shutil.copyfile(source, target)
         else:
