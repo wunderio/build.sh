@@ -4,23 +4,39 @@
 #
 # https://github.com/wunderkraut/build.sh
 # *****************************************************************************
-
-import getopt
-import sys
-import yaml
-import os
-import subprocess
-import shutil
-import hashlib
+from __future__ import print_function
 import datetime
-import stat
+import getopt
+import hashlib
+import os
+import random
 import re
+import shutil
+import stat
+import string
+import subprocess
+import sys
 import tarfile
 import time
-import random
-import string
+import yaml
 from distutils.spawn import find_executable
 from contextlib import closing
+from distutils.dir_util import copy_tree
+
+try:
+    # Python 2
+    input = raw_input
+except NameError:
+    # Python 3 doesn't have raw_input
+    pass
+
+try:
+    # Python 2
+    basestring
+except NameError:
+    # Python 3 doesn't have basestring
+    basestring = (str, bytes)
+
 
 # Build scripts version string.
 build_sh_version_string = "build.sh 1.0"
@@ -98,7 +114,7 @@ class Maker:
         self.composer = settings.get('composer', 'composer')
         self.drush = settings.get('drush', 'drush')
         self.type = settings.get('type', 'drush make')
-        self.drupal_version = settings.get('drupal_version', 'd7')
+        self.drupal_version = settings.get('drupal_version', 'd8')
         self.drupal_subpath = settings.get('drupal_subpath', '')
         self.temp_build_dir_name = settings['temporary']
         self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
@@ -114,6 +130,7 @@ class Maker:
         self.settings = settings
         self.store_old_buids = True
         self.linked = False
+        self.in_place = settings.get('build_in_place', False)
 
         if self.type == 'drush make':
             self.makefile = os.path.abspath(settings.get('makefile', 'conf/site.make'))
@@ -260,15 +277,18 @@ class Maker:
 
     # Print notice
     def notice(self, *args):
-        print "\033[92m** BUILD NOTICE: \033[0m" + ' '.join(str(a) for a in args)
+        print("\033[92m** BUILD NOTICE: \033[0m" + ' '.join(
+            str(a) for a in args))
 
     # Print errror
     def error(self, *args):
-        print "\033[91m** BUILD ERROR: \033[0m" + ' '.join(str(a) for a in args)
+        print("\033[91m** BUILD ERROR: \033[0m" + ' '.join(
+            str(a) for a in args))
 
     # Print warning
     def warning(self, *args):
-        print "\033[93m** BUILD WARNING: \033[0m" + ' '.join(str(a) for a in args)
+        print("\033[93m** BUILD WARNING: \033[0m" + ' '.join(
+            str(a) for a in args))
 
     # Run install
     def install(self):
@@ -296,9 +316,9 @@ class Maker:
     # Ask user for verification
     def verify(self, text):
         if text:
-            response = raw_input(text)
+            response = input(text)
         else:
-            response = raw_input("Type yes to verify that you know what you are doing: ")
+            response = input("Type yes to verify that you know what you are doing: ")
         if response.lower() != "yes":
             raise BuildError("Cancelled by user")
 
@@ -362,7 +382,7 @@ class Maker:
         elif step == 'drush':
             self.drush_command(command)
         else:
-            print "Unknown step " + step
+            print("Unknown step " + step)
 
     # Collect make args
     def _collect_make_args(self):
@@ -386,9 +406,11 @@ class Maker:
                 path = source[:-1]
                 paths = [path + name for name in os.listdir(path) if os.path.isdir(path + name)]
                 for source in paths:
-                    self._link_files(source, target + "/" + os.path.basename(source))
+                    if not os.path.islink(target + "/" + os.path.basename(source)):
+                        self._link_files(source, target + "/" + os.path.basename(source))
             else:
-                self._link_files(source, target)
+                if not os.path.islink(target):
+                    self._link_files(source, target)
 
     # Handle unlink
     def _unlink(self):
@@ -414,28 +436,37 @@ class Maker:
             target = self.temp_build_dir + "/" + target
             self._copy_files(source, target)
 
-    # Execute a composer command
+    # Execute a Composer command
     def _composer(self, args, quiet=False):
         if quiet:
-            FNULL = open(os.devnull, 'w')
-            return subprocess.call([self.composer] + args, stdout=FNULL, stderr=FNULL) == 0
+            with open(os.devnull, 'w') as fnull:
+                return subprocess.call([self.composer] + args,
+                                       stdout=fnull,
+                                       stderr=fnull) == 0
         return subprocess.call([self.composer] + args) == 0
 
     # Execute a Drush command
     def _drush(self, args, quiet=False, output=False):
-        bootstrap_args = ["--root=" + format(self.final_build_dir + self.drupal_subpath), "-l", self.multisite_site]
+        bootstrap_args = [
+            "--root=" + format(self.final_build_dir + self.drupal_subpath),
+            "-l",
+            self.multisite_site]
         if quiet:
-            FNULL = open(os.devnull, 'w')
-            return subprocess.call([self.drush] + bootstrap_args + args, stdout=FNULL, stderr=FNULL) == 0
+            with open(os.devnull, 'w') as fnull:
+                return subprocess.call([self.drush] + bootstrap_args + args,
+                                       stdout=fnull,
+                                       stderr=fnull) == 0
         if output:
-            return subprocess.check_output([self.drush] + bootstrap_args + args)
+            return subprocess.check_output(
+                [self.drush] + bootstrap_args + args)
         return subprocess.call([self.drush] + bootstrap_args + args) == 0
 
     # Ensure directories exist
     def _precheck(self):
         # Remove old build it if exists
-        if os.path.isdir(self.temp_build_dir):
-            shutil.rmtree(self.temp_build_dir)
+        if not self.in_place:
+            if os.path.isdir(self.temp_build_dir):
+                shutil.rmtree(self.temp_build_dir)
         if not os.path.isdir(self.old_build_dir):
             os.mkdir(self.old_build_dir)
 
@@ -480,27 +511,27 @@ class Maker:
         with closing(tarfile.open(backup_file, "w:gz", dereference=True)) as tar:
             tar.add(self.final_build_dir, arcname=self.final_build_dir_name, exclude=self._backup_exlude)
 
-        def passwd(self):
-            if self.drupal_version == 'd7':
-                query = "SELECT name from users WHERE uid=1"
-                uid1_name = self._drush(['sqlq',
-                                         query
-                                         ], False, True)
-            else:
-                query = "print user_load(1)->getUsername();"
-                uid1_name = self._drush(['ev',
-                                         query
-                                         ], False, True)
-            char_set = string.printable
-            password = ''.join(random.sample(char_set * 6, 16))
+    def passwd(self):
+        if self.drupal_version == 'd7':
+            query = "SELECT name from users WHERE uid=1"
+            uid1_name = self._drush(['sqlq',
+                                     query
+                                     ], False, True)
+        else:
+            query = "print user_load(1)->getUsername();"
+            uid1_name = self._drush(['ev',
+                                     query
+                                     ], False, True)
+        char_set = string.printable
+        password = ''.join(random.sample(char_set * 6, 16))
 
-            if self._drush(['upwd',
-                            uid1_name,
-                            '--password="' + password + '"'
-                            ], True):
-                self.notice("UID 1 password changed")
-            else:
-                self.warning("UID 1 password not changed!")
+        if self._drush(['upwd',
+                        uid1_name,
+                        '--password="' + password + '"'
+                        ], True):
+            self.notice("UID 1 password changed")
+        else:
+            self.warning("UID 1 password not changed!")
 
     # Wipe existing final build
     def _wipe(self):
@@ -555,9 +586,9 @@ class Maker:
     # Copy file from source to target
     def _copy_files(self, source, target):
         self._ensure_container(target)
-        if os.path.exists(source) and not os.path.exists(target):
+        if os.path.exists(source):
             if os.path.isdir(source):
-                shutil.copytree(source, target)
+                copy_tree(source, target)
             else:
                 shutil.copyfile(source, target)
         else:
@@ -566,27 +597,28 @@ class Maker:
 
 # Print help function
 def help():
-    print 'build.sh [options] [command] [site]'
-    print '[command] is one of the commands defined in the configuration file'
-    print '[site] defines the site to build, defaults to default'
-    print 'Options:'
-    print ' -h --help'
-    print '            Print this help'
-    print ' -c --config'
-    print '            Configuration file to use, defaults to conf/site.yml'
-    print ' -o --commands'
-    print '            Configuration file to use, defaults to conf/commands.yml'
-    print ' -s --skip-backup'
-    print '            Do not take backups, ever'
-    print ' -d --disable-cache'
-    print '            Do not use caches'
-    print ' -v --version'
-    print '            Print version information'
+    print('build.sh [options] [command] [site]')
+    print('[command] is one of the commands defined in the configuration file')
+    print('[site] defines the site to build, defaults to default')
+    print('Options:')
+    print(' -h --help')
+    print('            print(this help')
+    print(' -c --config')
+    print('            Configuration file to use, defaults to conf/site.yml')
+    print(' -o --commands')
+    print('            Configuration file to use, '
+          'defaults to conf/commands.yml')
+    print(' -s --skip-backup')
+    print('            Do not take backups, ever')
+    print(' -d --disable-cache')
+    print('            Do not use caches')
+    print(' -v --version')
+    print('            Print version information')
 
 
 # Print version function.
 def version():
-    print build_sh_version_string
+    print(build_sh_version_string)
 
 
 # Program main:
@@ -702,8 +734,8 @@ def main(argv):
             else:
                 maker.notice("No such command defined as '" + command + "'")
 
-    except Exception, errtxt:
-        print "\033[91m** BUILD ERROR: \033[0m%s" % (errtxt)
+    except Exception as errtxt:
+        print("\033[91m** BUILD ERROR: \033[0m%s" % (errtxt))
         exit(1)
 
 
