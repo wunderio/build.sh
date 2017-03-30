@@ -21,6 +21,7 @@ import time
 import yaml
 from distutils.spawn import find_executable
 from contextlib import closing
+from distutils.dir_util import copy_tree
 
 try:
     # Python 2
@@ -113,7 +114,7 @@ class Maker:
         self.composer = settings.get('composer', 'composer')
         self.drush = settings.get('drush', 'drush')
         self.type = settings.get('type', 'drush make')
-        self.drupal_version = settings.get('drupal_version', 'd7')
+        self.drupal_version = settings.get('drupal_version', 'd8')
         self.drupal_subpath = settings.get('drupal_subpath', '')
         self.temp_build_dir_name = settings['temporary']
         self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
@@ -129,6 +130,7 @@ class Maker:
         self.settings = settings
         self.store_old_buids = True
         self.linked = False
+        self.in_place = settings.get('build_in_place', False)
 
         if self.type == 'drush make':
             self.makefile = os.path.abspath(settings.get('makefile', 'conf/site.make'))
@@ -404,9 +406,11 @@ class Maker:
                 path = source[:-1]
                 paths = [path + name for name in os.listdir(path) if os.path.isdir(path + name)]
                 for source in paths:
-                    self._link_files(source, target + "/" + os.path.basename(source))
+                    if not os.path.islink(target + "/" + os.path.basename(source)):
+                        self._link_files(source, target + "/" + os.path.basename(source))
             else:
-                self._link_files(source, target)
+                if not os.path.islink(target):
+                    self._link_files(source, target)
 
     # Handle unlink
     def _unlink(self):
@@ -460,8 +464,9 @@ class Maker:
     # Ensure directories exist
     def _precheck(self):
         # Remove old build it if exists
-        if os.path.isdir(self.temp_build_dir):
-            shutil.rmtree(self.temp_build_dir)
+        if not self.in_place:
+            if os.path.isdir(self.temp_build_dir):
+                shutil.rmtree(self.temp_build_dir)
         if not os.path.isdir(self.old_build_dir):
             os.mkdir(self.old_build_dir)
 
@@ -581,9 +586,9 @@ class Maker:
     # Copy file from source to target
     def _copy_files(self, source, target):
         self._ensure_container(target)
-        if os.path.exists(source) and not os.path.exists(target):
+        if os.path.exists(source):
             if os.path.isdir(source):
-                shutil.copytree(source, target)
+                copy_tree(source, target)
             else:
                 shutil.copyfile(source, target)
         else:
