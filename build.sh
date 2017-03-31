@@ -248,6 +248,10 @@ class Maker:
                     self.notice("Removing old build archive " + f)
                     os.remove(fullpath)
 
+    def clearcache(self):
+        self.notice("Clearing make caches")
+        shutil.rmtree(self.make_cache_dir)
+
     # Purge current final build
     def purge(self):
         self.notice("Purging current build")
@@ -367,6 +371,8 @@ class Maker:
             self.update()
         elif step == 'cleanup':
             self.cleanup()
+        elif step == 'clearcache':
+            self.clearcache()
         elif step == 'append':
             self.append(command)
         elif step == 'verify':
@@ -720,6 +726,9 @@ def main(argv):
                 commands = yaml.safe_load(f)
 
         commands['test'] = {"test": "test"}
+
+        # Built in clearcache command for removing make cache.
+        commands['clearcache'] = { "clearcache": ""}
 
         # Add and overwrite commands with local_commands
         if 'local_commands' in settings[site]:
