@@ -116,7 +116,7 @@ class Maker:
         self.type = settings.get('type', 'drush make')
         self.drupal_version = settings.get('drupal_version', 'd8')
         self.drupal_subpath = settings.get('drupal_subpath', '')
-        self.temp_build_dir_name = settings.get('temporary', '/tmp')
+        self.temp_build_dir_name = settings.get('temporary', '.')
         self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
         self.final_build_dir_name = settings['final']
         self.final_build_dir = os.path.abspath(self.final_build_dir_name)
@@ -248,10 +248,6 @@ class Maker:
                     self.notice("Removing old build archive " + f)
                     os.remove(fullpath)
 
-    def clearcache(self):
-        self.notice("Clearing make caches")
-        shutil.rmtree(self.make_cache_dir)
-
     # Purge current final build
     def purge(self):
         self.notice("Purging current build")
@@ -371,8 +367,6 @@ class Maker:
             self.update()
         elif step == 'cleanup':
             self.cleanup()
-        elif step == 'clearcache':
-            self.clearcache()
         elif step == 'append':
             self.append(command)
         elif step == 'verify':
@@ -577,11 +571,12 @@ class Maker:
     # Symlink file from source to target
     def _link_files(self, source, target):
         self._ensure_container(target)
-        if os.path.exists(source) and not os.path.exists(target):
-            source = os.path.relpath(source, os.path.dirname(target))
-            os.symlink(source, target)
-        else:
-            raise BuildError("Can't link " + source + " to " + target + ". Make sure that the source exists.")
+        if not os.path.exists(target):
+            if os.path.exists(source):
+                source = os.path.relpath(source, os.path.dirname(target))
+                os.symlink(source, target)
+            else:
+                raise BuildError("Can't link " + source + " to " + target + ". Make sure that the source exists.")
 
     # Unlink file from target
     def _unlink_files(self, target):
@@ -726,9 +721,6 @@ def main(argv):
                 commands = yaml.safe_load(f)
 
         commands['test'] = {"test": "test"}
-
-        # Built in clearcache command for removing make cache.
-        commands['clearcache'] = { "clearcache": ""}
 
         # Add and overwrite commands with local_commands
         if 'local_commands' in settings[site]:
