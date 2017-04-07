@@ -116,7 +116,7 @@ class Maker:
         self.type = settings.get('type', 'drush make')
         self.drupal_version = settings.get('drupal_version', 'd8')
         self.drupal_subpath = settings.get('drupal_subpath', '')
-        self.temp_build_dir_name = settings['temporary']
+        self.temp_build_dir_name = settings.get('temporary', '/tmp')
         self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
         self.final_build_dir_name = settings['final']
         self.final_build_dir = os.path.abspath(self.final_build_dir_name)
