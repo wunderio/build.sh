@@ -113,15 +113,24 @@ class Maker:
 
         self.composer = settings.get('composer', 'composer')
         self.drush = settings.get('drush', 'drush')
-        self.type = settings.get('type', 'drush make')
         self.drupal_version = settings.get('drupal_version', 'd8')
+
+        if self.drupal_version == 'd8':
+            self.type = settings.get('type', 'composer')
+            self.in_place = settings.get('build_in_place', True)
+            self.drupal_subpath = settings.get('drupal_subpath', '/web')
+        else:
+            self.type = settings.get('type', 'drush make')
+            self.in_place = settings.get('build_in_place', False)
+            self.drupal_subpath = settings.get('drupal_subpath', '')
+
         self.drupal_subpath = settings.get('drupal_subpath', '')
         self.temp_build_dir_name = settings.get('temporary', '.')
         self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
-        self.final_build_dir_name = settings['final']
+        self.final_build_dir_name = settings.get('final', '.')
         self.final_build_dir = os.path.abspath(self.final_build_dir_name)
         self.final_build_dir_bak = self.final_build_dir + "_bak_" + str(time.time())
-        self.old_build_dir = os.path.abspath(settings.get('previous', 'previous'))
+        self.old_build_dir = os.path.abspath(settings.get('previous', 'builds'))
         self.profile_name = settings.get('profile', 'standard')
         self.site_name = settings.get('site', 'A drupal site')
         self.multisite_site = settings.get('multisite_site', 'default')
