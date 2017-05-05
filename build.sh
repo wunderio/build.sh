@@ -113,7 +113,7 @@ class Maker:
 
         self.composer = settings.get('composer', 'composer')
         self.drush = settings.get('drush', 'drush')
-        self.drupal_version = settings.get('drupal_version', 'd8')
+        self.drupal_version = settings.get('drupal_version', 'd7')
 
         if self.drupal_version == 'd8':
             self.type = settings.get('type', 'composer')
