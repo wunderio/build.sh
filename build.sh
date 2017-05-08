@@ -124,7 +124,6 @@ class Maker:
             self.in_place = settings.get('build_in_place', False)
             self.drupal_subpath = settings.get('drupal_subpath', '')
 
-        self.drupal_subpath = settings.get('drupal_subpath', '')
         self.temp_build_dir_name = settings.get('temporary', '.')
         self.temp_build_dir = os.path.abspath(self.temp_build_dir_name)
         self.final_build_dir_name = settings.get('final', '.')
@@ -139,7 +138,6 @@ class Maker:
         self.settings = settings
         self.store_old_buids = True
         self.linked = False
-        self.in_place = settings.get('build_in_place', False)
 
         if self.type == 'drush make':
             self.makefile = os.path.abspath(settings.get('makefile', 'conf/site.make'))
