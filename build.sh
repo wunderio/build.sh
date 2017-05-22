@@ -187,13 +187,10 @@ class Maker:
     def _composer_make(self):
         self._precheck()
         self.link()
-
         params = []
-
         # Do not install dev packages if not explicitly required
         if not self._require_dev():
             params.append('--no-dev')
-
         self._composer([
             '-d=' + self.temp_build_dir,
             'install'
@@ -313,23 +310,22 @@ class Maker:
             raise BuildError("Install failed.")
 
     def codecept(self):
-        if self._require_dev():
-            self.notice("Running tests")
-            web_dir = format(self.final_build_dir + self.drupal_subpath)
-            codecept_args = [self.codecept_bin, "run"]
-            for key in self.codecept_options:
-                if not isinstance(self.codecept_options[key], bool):
-                    codecept_args.extend([key, self.codecept_options[key]])
-                elif self.codecept_options[key]:
-                    codecept_args.extend([key])
-            if self.site_env != 'default' and self.site_env != 'local':
-                codecept_args.extend(["--env", self.site_env])
-            value = subprocess.call(codecept_args, cwd=web_dir) == 0
-            if not value:
-                raise BuildError("Tests failed.")
-        else:
-            self.warning("Needed packages are not required in this environment. Skipping tests.")
-
+       if self._require_dev():
+           self.notice("Running tests")
+           web_dir = format(self.final_build_dir + self.drupal_subpath)
+           codecept_args = [self.codecept_bin, "run"]
+           for key in self.codecept_options:
+               if not isinstance(self.codecept_options[key], bool):
+                   codecept_args.extend([key, self.codecept_options[key]])
+               elif self.codecept_options[key]:
+                   codecept_args.extend([key])
+           if self.site_env != 'default' and self.site_env != 'local':
+               codecept_args.extend(["--env", self.site_env])
+           value = subprocess.call(codecept_args, cwd=web_dir) == 0
+           if not value:
+               raise BuildError("Tests failed.")
+       else:
+           self.warning("Needed packages are not required in this environment. Skipping tests.")
 
     # Update existing final build
     def update(self):
@@ -627,13 +623,12 @@ class Maker:
 
     # Check if dev requirements should be installed on environment
     def _require_dev(self):
-        if ("require_dev" in self.settings and
+        if self.site_env == 'default' or ("require_dev" in self.settings and
             isinstance(self.settings['require_dev'], bool) and
             self.settings['require_dev']):
             return True
         else:
             return False
-
 
 # Print help function
 def help():
