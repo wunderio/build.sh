@@ -333,12 +333,9 @@ class Maker:
     def shell(self, command):
         if isinstance(command, list):
             for step in command:
-                value = os.system(command) == 0
-                if not value:
-                    return False
-            return True
+                self._shell(step)
         else:
-            return os.system(command) == 0
+            self._shell(command)
 
     # Execute a drush command
     def drush_command(self, command):
@@ -433,6 +430,12 @@ class Maker:
                     self._unlink_files(target + "/" + os.path.basename(source))
             else:
                 self._unlink_files(target)
+
+    # Handle shell command
+    def _shell(self, command):
+        value = os.system(command) == 0
+        if not value:
+            raise BuildError("Failed executing: " + command)
 
     # Handle copy
     def _copy(self):
