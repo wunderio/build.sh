@@ -434,7 +434,7 @@ class Maker:
     # Handle shell command
     def _shell(self, command):
         exit_code = os.system(command)
-        if exit_code <> 0:
+        if not exit_code == 0
             raise BuildError("Failed executing: '" + command + "' (Exit code: " + str(exit_code) + ")")
 
     # Handle copy
