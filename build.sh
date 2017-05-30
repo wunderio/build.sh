@@ -132,6 +132,8 @@ class Maker:
         self.old_build_dir = os.path.abspath(settings.get('previous', 'builds'))
         self.profile_name = settings.get('profile', 'standard')
         self.site_name = settings.get('site', 'A drupal site')
+        self.codecept_options = settings.get('codecept_options',[])
+        self.codecept_bin = settings.get('codecept_bin','../vendor/bin/codecept')
         self.multisite_site = settings.get('multisite_site', 'default')
         self.make_cache_dir = settings.get('make_cache', '.make_cache')
         self.site_env = settings.get('site_env', 'default')
@@ -185,13 +187,10 @@ class Maker:
     def _composer_make(self):
         self._precheck()
         self.link()
-
         params = []
-
-        # Do not install dev packages on non-development environments
-        if self.site_env != 'default' and self.site_env != 'local':
+        # Do not install dev packages if not explicitly required
+        if not self._require_dev():
             params.append('--no-dev')
-
         self._composer([
             '-d=' + self.temp_build_dir,
             'install'
@@ -310,6 +309,24 @@ class Maker:
         ]):
             raise BuildError("Install failed.")
 
+    def codecept(self):
+       if self._require_dev():
+           self.notice("Running tests")
+           web_dir = format(self.final_build_dir + self.drupal_subpath)
+           codecept_args = [self.codecept_bin, "run"]
+           for key in self.codecept_options:
+               if not isinstance(self.codecept_options[key], bool):
+                   codecept_args.extend([key, self.codecept_options[key]])
+               elif self.codecept_options[key]:
+                   codecept_args.extend([key])
+           if self.site_env != 'default' and self.site_env != 'local':
+               codecept_args.extend(["--env", self.site_env])
+           value = subprocess.call(codecept_args, cwd=web_dir) == 0
+           if not value:
+               raise BuildError("Tests failed.")
+       else:
+           self.warning("Needed packages are not required in this environment. Skipping tests.")
+
     # Update existing final build
     def update(self):
         if self._drush([
@@ -371,6 +388,8 @@ class Maker:
             self.update()
         elif step == 'cleanup':
             self.cleanup()
+        elif step == 'codecept':
+            self.codecept()
         elif step == 'append':
             self.append(command)
         elif step == 'verify':
@@ -605,6 +624,14 @@ class Maker:
         else:
             raise BuildError("Can't copy " + source + " to " + target + ". Make sure that the source exists.")
 
+    # Check if dev requirements should be installed on environment
+    def _require_dev(self):
+        if self.site_env == 'default' or ("require_dev" in self.settings and
+            isinstance(self.settings['require_dev'], bool) and
+            self.settings['require_dev']):
+            return True
+        else:
+            return False
 
 # Print help function
 def help():
