@@ -583,7 +583,10 @@ class Maker:
         self._ensure_container(target)
         if not os.path.exists(target):
             if os.path.exists(source):
-                source = os.path.realpath(source)
+                if os.path.isabs(source):
+                    source = os.path.realpath(source)
+                else:
+                    source = os.path.relpath(source, os.path.dirname(target))
                 os.symlink(source, target)
             else:
                 raise BuildError("Can't link " + source + " to " + target + ". Make sure that the source exists.")
