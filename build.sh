@@ -220,8 +220,10 @@ class Maker:
             if not os.path.isdir(self.make_cache_dir):
                 os.makedirs(self.make_cache_dir)
 
-            with closing(tarfile.open(packaged_build, "w:gz")) as tar:
-                tar.add(self.temp_build_dir, arcname=self.temp_build_dir_name)
+            # Only create cache tar if cache is not disabled
+            if not build_sh_disable_cache:
+                with closing(tarfile.open(packaged_build, "w:gz")) as tar:
+                    tar.add(self.temp_build_dir, arcname=self.temp_build_dir_name)
 
         # with open(self.temp_build_dir + "/buildhash", "w") as f:
         #     f.write(self.makefile_hash)
