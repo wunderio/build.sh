@@ -199,10 +199,15 @@ class Maker:
         if self.site_env != 'default' and self.site_env != 'local' and allow_dev != True:
             params.append('--no-dev')
 
-        self._composer([
-            '-d=' + self.temp_build_dir,
-            'install'
-        ] + params)
+        if self.temp_build_dir_name == ".":
+            self._composer([
+                'install'
+            ] + params)
+        else:
+            self._composer([
+                '-d=' + self.temp_build_dir,
+                'install'
+            ] + params)
 
     def _drush_make(self):
         global build_sh_disable_cache
