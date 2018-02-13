@@ -198,6 +198,7 @@ class Maker:
 	# Allow override to allow dev packages
         if self.site_env != 'default' and self.site_env != 'local' and allow_dev != True:
             params.append('--no-dev')
+            params.append('--no-interaction')
 
         if self.temp_build_dir_name == ".":
             self._composer([
