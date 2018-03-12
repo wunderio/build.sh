@@ -12,8 +12,8 @@ script:
 - pyflakes build.sh
 - yamllint .
 after_success:
-- travis_retry pip install pep8
-- pep8 --statistics --count build.sh
+- travis_retry pip install pycodestyle
+- pycodestyle --statistics --count build.sh
 matrix:
   fast_finish: true
   allow_failures:
