@@ -201,14 +201,17 @@ class Maker:
             params.append('--no-interaction')
 
         if self.temp_build_dir_name == ".":
-            self._composer([
+            command_status = self._composer([
                 'install'
             ] + params)
         else:
-            self._composer([
+            command_status = self._composer([
                 '-d=' + self.temp_build_dir,
                 'install'
             ] + params)
+
+        if not command_status:
+            raise BuildError("Composer install failed")
 
     def _drush_make(self):
         global build_sh_disable_cache
