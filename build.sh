@@ -206,7 +206,7 @@ class Maker:
             ] + params)
         else:
             command_status = self._composer([
-                '-d=' + self.temp_build_dir,
+                '--working-dir=' + self.temp_build_dir,
                 'install'
             ] + params)
 
