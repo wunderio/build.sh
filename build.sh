@@ -426,7 +426,7 @@ class Maker:
         if "link" not in self.settings:
             return
         for tuple in self.settings['link']:
-            source, target = tuple.items()[0]
+            source, target = list(tuple.items())[0]
             target = self.temp_build_dir + "/" + target
             if source.endswith('*'):
                 path = source[:-1]
@@ -443,7 +443,7 @@ class Maker:
         if "link" not in self.settings:
             return
         for tuple in self.settings['link']:
-            source, target = tuple.items()[0]
+            source, target = list(tuple.items())[0]
             target = self.final_build_dir + "/" + target
             if source.endswith('*'):
                 path = source[:-1]
